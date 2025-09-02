@@ -1,0 +1,180 @@
+# ===========================================
+# EventHub - College Event Management System
+# Comprehensive .gitignore Configuration
+# ===========================================
+
+# ============= Dependencies =============
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ============= Build Outputs =============
+dist/
+dist-ssr/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# ============= Environment Variables =============
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+.env.production
+server/.env
+server/.env.local
+server/.env.production
+
+# ============= IDE & Editor Files =============
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ============= OS Generated Files =============
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============= Logs =============
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ============= Runtime Data =============
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ============= Coverage & Testing =============
+coverage/
+.nyc_output
+.coverage
+*.lcov
+.jest/
+test-results/
+playwright-report/
+
+# ============= Cache Directories =============
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ============= Temporary Files =============
+*.tmp
+*.temp
+.temp/
+.tmp/
+*.local
+
+# ============= Database Files =============
+*.db
+*.sqlite
+*.sqlite3
+dump.rdb
+
+# ============= Upload Directories =============
+uploads/
+public/uploads/
+temp-uploads/
+
+# ============= Generated Documentation =============
+docs/generated/
+api-docs/
+
+# ============= SSL Certificates =============
+*.pem
+*.key
+*.crt
+*.cert
+
+# ============= Backup Files =============
+*.backup
+*.bak
+*.old
+
+# ============= Development Tools =============
+.vite/
+.turbo/
+.vercel/
+.netlify/
+
+# ============= Platform Specific =============
+# Windows
+*.exe
+*.msi
+*.lnk
+
+# Linux
+*.AppImage
+*.deb
+*.rpm
+
+# macOS
+*.dmg
+*.app
+
+# ============= Project Specific =============
+# Screenshots - ALLOW for README documentation
+# These images are needed for GitHub README display
+# public/screenshots/*.png    # COMMENTED OUT - Allow screenshots for README
+# public/screenshots/*.jpg    # COMMENTED OUT - Allow screenshots for README
+# public/screenshots/*.jpeg   # COMMENTED OUT - Allow screenshots for README
+# public/screenshots/*.gif    # COMMENTED OUT - Allow screenshots for README
+
+# User uploaded content (KEEP PRIVATE)
+public/user-uploads/
+public/profile-pictures/
+
+# Generated QR codes
+public/qr-codes/
+temp-qr/
+
+# Backup files
+*.backup
+database-backups/
+
+# ============= Security & Sensitive Data =============
+# JWT secrets and API keys
+secrets/
+keys/
+.secrets/
+
+# Configuration with sensitive data
+config/production.json
+config/staging.json
+
+# ============= Keep Important Files =============
+!.gitkeep
+!README.md
+!LICENSE
+!.github/
