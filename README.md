@@ -624,23 +624,23 @@ This project was built through collaborative effort using modern development pra
 ### 🖼️ Application Screenshots
 
 #### Landing Page
-![Home Page](public/screenshots/home.png)
+![Home Page](Public/screenshots/home.png)
 *Clean, modern landing page with clear navigation*
 
 #### Event Dashboard
-![Dashboard](public/screenshots/dashboard.png)
+![Dashboard](Public/screenshots/dashboard.png)
 *Comprehensive dashboard showing user events and registrations*
 
 #### Event Creation
-![Create Event](public/screenshots/create-event.png)
+![Create Event](Public/screenshots/create-event.png)
 *Intuitive event creation with live image preview*
 
 #### Event Details
-![Event Details](public/screenshots/event-details.png)
+![Event Details](Public/screenshots/event-details.png)
 *Detailed event view with participant management*
 
 #### Mobile Responsive
-![Mobile View](public/screenshots/mobile.png)
+![Mobile View](Public/screenshots/mobile.png)
 *Fully responsive design for all devices*
 
 ---
