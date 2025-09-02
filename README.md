@@ -624,23 +624,23 @@ This project was built through collaborative effort using modern development pra
 ### 🖼️ Application Screenshots
 
 #### Landing Page
-_![Home Page](./public/screenshots/home.png)_
+![Home Page](public/screenshots/home.png)
 *Clean, modern landing page with clear navigation*
 
 #### Event Dashboard
-_![Dashboard](./public/screenshots/dashboard.png)_
+![Dashboard](public/screenshots/dashboard.png)
 *Comprehensive dashboard showing user events and registrations*
 
 #### Event Creation
-_![Create Event](./public/screenshots/create-event.png)_
+![Create Event](public/screenshots/create-event.png)
 *Intuitive event creation with live image preview*
 
 #### Event Details
-_![Event Details](./public/screenshots/event-details.png)_
+![Event Details](public/screenshots/event-details.png)
 *Detailed event view with participant management*
 
 #### Mobile Responsive
-_![Mobile View](./public/screenshots/mobile.png)_
+![Mobile View](public/screenshots/mobile.png)
 *Fully responsive design for all devices*
 
 ---
@@ -727,5 +727,6 @@ A: Use your hosting platform's environment variable settings. Never commit `.env
 - [ ] **Mobile App** - React Native version
 - [ ] **Advanced Search** - Elasticsearch integration
 - [ ] **File Upload** - Cloud storage for documents
-#   E v e n t H u b - - - C o l l e g e - E v e n t - M a n a g e m e n t - S y s t e m  
+#   E v e n t H u b - - - C o l l e g e - E v e n t - M a n a g e m e n t - S y s t e m 
+ 
  
