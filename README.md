@@ -727,6 +727,4 @@ A: Use your hosting platform's environment variable settings. Never commit `.env
 - [ ] **Mobile App** - React Native version
 - [ ] **Advanced Search** - Elasticsearch integration
 - [ ] **File Upload** - Cloud storage for documents
-#   E v e n t H u b - - - C o l l e g e - E v e n t - M a n a g e m e n t - S y s t e m 
- 
- 
+#
