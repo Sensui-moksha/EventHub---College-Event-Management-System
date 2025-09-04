@@ -1,17 +1,19 @@
 
 # 🎉 Event Hub - College Event Management System
 
-A modern, full-stack web application for managing college events, registrations, and user profiles. Built with React 18, TypeScript, Vite, Node.js/Express, MongoDB Atlas, and Tailwind CSS with advanced features like QR code generation, bulk operations, and comprehensive user management.
+A modern, full-stack web application for managing college events, registrations, and user profiles. Built with React 18, TypeScript, Vite, Node.js/Express, MongoDB Atlas, and Tailwind CSS with advanced features like **multi-event QR code registration**, **QR scanner for attendance**, **bulk operations**, and **comprehensive user management**.
 
 ---
 
 ## 🚀 Overview
-This comprehensive event management system streamlines college event organization, allowing admins and organizers to create, edit, and manage events while students can register, view details, and manage their profiles. The system features role-based authentication, QR code generation for registrations, bulk delete operations, real-time notifications, live image previews, profile picture uploads, and demo accounts for easy testing.
+This comprehensive event management system streamlines college event organization, allowing admins and organizers to create, edit, and manage events while students can register, view details, and manage their profiles. The system features role-based authentication, **advanced QR code generation with event names**, **multi-event registration system**, **QR scanner for organizers**, bulk delete operations, real-time notifications, live image previews, profile picture uploads, and demo accounts for easy testing.
 
 ### 🎯 Key Highlights
 - **Modern Tech Stack:** React 18 + TypeScript + Vite for blazing-fast development
 - **Comprehensive Backend:** Node.js/Express with MongoDB Atlas cloud database
-- **Advanced Features:** QR code generation, bulk operations, real-time updates
+- **Advanced QR System:** Multi-event registration with unique QR codes per event
+- **QR Code Features:** Event names displayed on QR codes, secure HMAC-SHA256 signatures
+- **QR Scanner:** Built-in camera scanner for organizers and admins
 - **Mobile-First Design:** Responsive UI with Tailwind CSS
 - **Production Ready:** Optimized build process and error handling
 
@@ -53,6 +55,8 @@ project/
     ├── components/           # Reusable UI components
     │   ├── DashboardBulkDelete.tsx  # Bulk delete functionality
     │   ├── EventCard.tsx     # Event display card component
+    │   ├── MultiEventRegistration.tsx # Multi-event registration with QR codes
+    │   ├── QRScanner.tsx     # QR code scanner for attendance
     │   ├── Navbar.tsx        # Navigation header component
     │   ├── ProtectedRoute.tsx# Authentication route protection
     │   └── ui/
@@ -67,11 +71,12 @@ project/
     │   ├── CreateEvent.tsx   # Event creation and editing
     │   ├── Dashboard.tsx     # User dashboard with overview
     │   ├── EventDetails.tsx  # Detailed event view and participants
-    │   ├── Events.tsx        # Events listing with filters
+    │   ├── Events.tsx        # Events listing with multi-register toggle
     │   ├── EventsFixed.tsx   # Alternative events view
     │   ├── Home.tsx          # Landing page
     │   ├── Login.tsx         # Authentication page with demo accounts
     │   ├── Profile.tsx       # User profile management
+    │   ├── QRScannerPage.tsx # QR scanner interface for organizers
     │   ├── Register.tsx      # User registration
     │   └── RegisterFixed.tsx # Alternative registration form
     └── types/
@@ -124,11 +129,39 @@ project/
 - **Department & Branch Tracking:** Organize users by academic details
 
 ### 🎯 Registration System
-- **QR Code Generation:** Automatic QR codes for event registrations
-- **QR Code Scanning:** Built-in scanner for event check-ins
-- **Registration Tracking:** Monitor attendance and participation
-- **Registration Limits:** Maximum participant controls
+- **Multi-Event Registration:** Register for multiple events in one session
+- **Unique QR Codes:** Each event generates its own QR code with event name overlay
+- **QR Code Features:** Event names displayed below QR codes with custom canvas rendering
+- **Secure QR Codes:** HMAC-SHA256 signatures prevent tampering and forgery
+- **QR Code Specifications:** 300x300px PNG with Arial 16px bold event names
+- **Download QR Codes:** One-click download of individual event QR codes
+- **QR Scanner:** Built-in camera scanner for organizers and admins
+- **Attendance Tracking:** Real-time attendance marking with scan validation
+- **Scan History:** Complete log of all QR code scans with timestamps
+- **Registration Limits:** Maximum participant controls with validation
 - **Registration Deadlines:** Time-bound registration periods
+
+### 📱 Advanced QR Code System
+- **Event-Specific QR Codes:** Each registration generates a unique QR code per event
+- **Visual Event Identification:** Event names prominently displayed on QR images
+- **Canvas-Based Generation:** Custom QR generation with HTML5 Canvas and text overlays
+- **Security Features:**
+  - HMAC-SHA256 cryptographic signatures
+  - Timestamp validation and expiry
+  - Event-specific validation prevents cross-event usage
+- **QR Scanner Interface:**
+  - Camera-based scanning with HTML5 QR code reader
+  - Manual entry fallback option
+  - Real-time validation and feedback
+  - Scan statistics and history tracking
+- **Multi-Event Support:**
+  - Register for multiple events simultaneously
+  - Each event gets its own downloadable QR code
+  - Bulk registration with individual QR generation
+- **Organizer Tools:**
+  - QR Scanner page accessible to organizers and admins
+  - Event selection dropdown for targeted scanning
+  - Success/failure tracking with detailed reports
 
 ### 🔔 Notification System
 - **Toast Notifications:** Real-time feedback for user actions
@@ -397,26 +430,44 @@ npm run build
    - Use demo accounts (see table above) for quick testing
    - Create a new account via the registration page
 
+### 📋 Basic Workflow
+1. **Browse Events:** Students view available events with filters
+2. **Register:** Click register button on EventCard or EventDetails
+3. **Get QR Code:** Automatic QR code generation for event access
+4. **Track Status:** View registration status in Dashboard
+
+#### Core Features
+- **QR Code Generation:** Automatic QR codes for event registrations
+- **QR Code Scanning:** Built-in scanner for event check-ins
+- **Registration Tracking:** Monitor attendance and participation
+- **Registration Limits:** Maximum participant controls
+
 ### 👤 User Roles & Capabilities
 
 #### 🎓 Student Features
 - **Event Discovery:** Browse and filter events by category
-- **Event Registration:** Register for events with QR code generation
+- **Multi-Event Registration:** Register for multiple events simultaneously
 - **Profile Management:** Upload profile picture, view registration ID
 - **Dashboard:** View registered events and participation history
-- **QR Code Access:** Get QR codes for registered events
+- **QR Code Access:** Get unique QR codes for each registered event with event names
+- **Download QR Codes:** Download individual QR codes for offline use
 
 #### 👨‍🏫 Organizer Features
 - **Event Creation:** Create and manage events
 - **Event Editing:** Modify event details, requirements, and settings
 - **Participant Management:** View registered participants
 - **Event Status Control:** Update event status (upcoming, ongoing, completed)
+- **QR Scanner Access:** Use QR scanner to validate event attendance
+- **Attendance Tracking:** Mark attendance and view scan history
+- **Event-Specific Scanning:** Only scan QR codes for events they organize
 
 #### 🔧 Admin Features
 - **Full Event Management:** Create, edit, delete any event
 - **User Management:** View and manage all users via AdminUsers page
 - **Bulk Operations:** Mass delete events using DashboardBulkDelete
 - **System Overview:** Complete system administration capabilities
+- **Universal QR Scanner:** Scan QR codes for all events in the system
+- **Advanced Analytics:** View comprehensive scan statistics and reports
 
 ### 🎯 Key Features In Action
 
@@ -428,9 +479,21 @@ npm run build
 
 #### Registration Process
 1. **Browse Events:** Students view available events with filters
-2. **Register:** Click register button on EventCard or EventDetails
-3. **Get QR Code:** Automatic QR code generation for event access
-4. **Track Status:** View registration status in Dashboard
+2. **Choose Registration Method:**
+   - **Single Event:** Click register on individual EventCard or EventDetails
+   - **Multi-Event:** Use "Multi-Register" toggle on Events page for bulk registration
+3. **Multi-Event Selection:** Select multiple events from grid layout
+4. **Get QR Codes:** Each event generates unique QR code with event name displayed
+5. **Download & Save:** Download individual QR codes for each registered event
+6. **Track Status:** View registration status and QR codes in Dashboard
+
+#### QR Code Attendance Process
+1. **Event Day:** Students bring QR codes (physical or digital)
+2. **Organizer Scanner:** Organizers access QR Scanner page from navigation
+3. **Select Event:** Choose specific event to scan for from dropdown
+4. **Scan QR Code:** Use camera scanner or manual entry for validation
+5. **Instant Validation:** Real-time verification with event name confirmation
+6. **Attendance Marked:** Successful scans logged with timestamps and user details
 
 #### Profile Customization
 1. **Access Profile:** Navigate to Profile page
@@ -448,7 +511,9 @@ npm run build
 | POST | `/api/events` | Create new event | Admin/Organizer |
 | PUT | `/api/events/:id` | Update event | Admin/Organizer |
 | DELETE | `/api/events/:id` | Delete event | Admin/Organizer |
-| POST | `/api/registrations` | Register for event | Student |
+| POST | `/api/events/:id/register` | Register for single event | Student |
+| POST | `/api/events/register-multiple` | Multi-event registration | Student |
+| POST | `/api/qr/validate` | Validate QR code and mark attendance | Organizer/Admin |
 | GET | `/api/users/profile` | Get user profile | Authenticated |
 | PUT | `/api/users/profile` | Update profile | Authenticated |
 
@@ -480,6 +545,8 @@ npm run build
 | **Mongoose** | ^7.6.0 | ODM for MongoDB |
 | **bcryptjs** | ^3.0.2 | Password Hashing |
 | **QRCode** | ^1.5.4 | Server-side QR Generation |
+| **qr-image** | ^1.2.0 | QR Image Generation |
+| **Canvas** | ^2.11.2 | HTML5 Canvas for QR overlays |
 | **CORS** | ^2.8.5 | Cross-Origin Requests |
 | **dotenv** | ^16.6.1 | Environment Variables |
 
@@ -716,15 +783,24 @@ A: Use your hosting platform's environment variable settings. Never commit `.env
 
 ## 🚀 Future Enhancements
 
+### Completed Features ✅
+- [x] **QR Code System** - Secure QR generation and scanning
+- [x] **Multi-Event Registration** - Register for multiple events at once
+- [x] **Event Name on QR Codes** - Custom QR codes with event names
+- [x] **Role-based Scanner Access** - Organizers and admins can scan QR codes
+- [x] **Attendance Tracking** - Real-time attendance verification
+
 ### Planned Features
 - [ ] **Real-time Notifications** - WebSocket integration
 - [ ] **Email Notifications** - Automated email system
-- [ ] **Advanced Analytics** - Event analytics dashboard
+- [ ] **Advanced Analytics** - Event analytics dashboard with QR scan metrics
 - [ ] **Calendar Integration** - Google Calendar sync
 - [ ] **Payment Integration** - Paid event support
 - [ ] **Dark Mode** - Complete theme system
 - [ ] **Multi-language Support** - Internationalization
-- [ ] **Mobile App** - React Native version
+- [ ] **Mobile App** - React Native version with native QR scanning
 - [ ] **Advanced Search** - Elasticsearch integration
 - [ ] **File Upload** - Cloud storage for documents
+- [ ] **Bulk QR Operations** - Export multiple QR codes
+- [ ] **Offline QR Scanning** - Sync when connection restored
 #

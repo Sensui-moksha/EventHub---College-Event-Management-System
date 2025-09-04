@@ -12,6 +12,7 @@ import Events from './pages/Events';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import AdminUsers from './pages/AdminUsers';
+import QRScannerPage from './pages/QRScannerPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
@@ -99,6 +100,13 @@ function App() {
                     <ProtectedRoute>
                       <ErrorBoundary>
                         <CreateEvent />
+                      </ErrorBoundary>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/qr-scanner" element={
+                    <ProtectedRoute>
+                      <ErrorBoundary>
+                        <QRScannerPage />
                       </ErrorBoundary>
                     </ProtectedRoute>
                   } />

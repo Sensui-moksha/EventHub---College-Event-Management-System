@@ -11,7 +11,8 @@ import {
   Plus,
   Menu,
   X,
-  GraduationCap
+  GraduationCap,
+  QrCode
 } from 'lucide-react';
 
 const Navbar: React.FC = () => {
@@ -39,6 +40,7 @@ const Navbar: React.FC = () => {
     navItems.push({ path: '/dashboard', label: 'Dashboard', icon: User });
     if (user.role === 'organizer' || user.role === 'admin') {
       navItems.push({ path: '/create-event', label: 'Create Event', icon: Plus });
+      navItems.push({ path: '/qr-scanner', label: 'QR Scanner', icon: QrCode });
     }
     if (user.role === 'admin') {
       navItems.push({ path: '/admin-users', label: 'Users', icon: User });
