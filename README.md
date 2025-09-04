@@ -657,6 +657,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 👨‍💻 Development Team
 
 #### **Core Contributors**
+-**[Mokshyagna yadav](https://github.com/Sensui-moksha)**
+
 - **[Bhavya Sree](https://github.com/bhavyasree1076)**
 
 - **[Naseem](https://github.com/NaseemShaik-Mic)**
