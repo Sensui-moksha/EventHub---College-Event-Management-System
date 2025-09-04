@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { useEvents } from '../contexts/EventContext';
 import EventCard from '../components/EventCard';
-import { Search, Filter, Calendar, Users, Trophy } from 'lucide-react';
+import MultiEventRegistration from '../components/MultiEventRegistration';
+import { Search, Filter, Calendar, Users, Trophy, Grid, List } from 'lucide-react';
 
 const Events: React.FC = () => {
   const { events } = useEvents();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'multi-register'>('grid');
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -131,7 +133,7 @@ const Events: React.FC = () => {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white min-w-[140px]"
+                className="pl-4 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white min-w-[140px]"
               >
                 {statuses.map(status => (
                   <option key={status.value} value={status.value}>
@@ -140,26 +142,65 @@ const Events: React.FC = () => {
                 ))}
               </select>
             </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Grid className="w-4 h-4 inline mr-2" />
+                Browse
+              </button>
+              <button
+                onClick={() => setViewMode('multi-register')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  viewMode === 'multi-register'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <List className="w-4 h-4 inline mr-2" />
+                Multi-Register
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Events Grid */}
-        {filteredEvents.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredEvents.map(event => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+        {/* Content based on view mode */}
+        {viewMode === 'grid' ? (
+          <>
+            {/* Events Grid */}
+            {filteredEvents.length > 0 ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredEvents.map(event => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No events found</h3>
+                <p className="text-gray-500">Try adjusting your search criteria.</p>
+              </div>
+            )}
+          </>
         ) : (
-          <div className="text-center py-16">
-            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Events Found</h3>
-            <p className="text-gray-500">
-              {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all'
-                ? 'Try adjusting your filters to find more events.'
-                : 'No events are currently available.'}
-            </p>
-          </div>
+          /* Multi-Event Registration */
+          <MultiEventRegistration 
+            availableEvents={filteredEvents.filter(event => 
+              event.status === 'upcoming' && 
+              event.currentParticipants < event.maxParticipants &&
+              new Date() <= new Date(event.registrationDeadline)
+            )}
+            onRegistrationComplete={(result) => {
+              console.log('Multi-registration completed:', result);
+            }}
+          />
         )}
       </div>
     </div>

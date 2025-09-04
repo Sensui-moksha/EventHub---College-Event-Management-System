@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Event, Registration, EventResult } from '../types';
+import { Event, Registration, EventResult, MultiEventRegistration, QRValidationResult } from '../types';
 import { useAuth } from './AuthContext';
 
 interface EventContextType {
@@ -7,7 +7,9 @@ interface EventContextType {
   registrations: Registration[];
   results: EventResult[];
   registerForEvent: (eventId: string) => Promise<boolean>;
+  registerForMultipleEvents: (eventIds: string[]) => Promise<MultiEventRegistration>;
   unregisterFromEvent: (eventId: string) => Promise<boolean>;
+  validateQRCode: (qrData: string, eventId?: string, scannedBy?: string, location?: string) => Promise<QRValidationResult>;
   createEvent: (eventData: Omit<Event, 'id' | 'createdAt' | 'currentParticipants' | 'organizer'>) => Promise<boolean>;
   updateEvent: (eventId: string, eventData: Partial<Event>) => Promise<boolean>;
   deleteEvent: (eventId: string) => Promise<boolean>;
@@ -111,6 +113,112 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
       return false;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const registerForMultipleEvents = async (eventIds: string[]): Promise<MultiEventRegistration> => {
+    if (!user) {
+      return {
+        eventIds,
+        userId: '',
+        registrations: [],
+        totalEvents: eventIds.length,
+        successfulRegistrations: 0,
+        failedRegistrations: eventIds.map(id => ({ eventId: id, reason: 'User not authenticated' }))
+      };
+    }
+
+    setLoading(true);
+    try {
+      // Convert frontend event IDs to backend IDs
+      const backendEventIds = eventIds.map(eventId => {
+        const event = events.find(e => e.id === eventId || (e as any)._id === eventId);
+        return (event && (event as any)._id) ? (event as any)._id : eventId;
+      });
+
+      const res = await fetch('/api/events/register-multiple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: user._id,
+          eventIds: backendEventIds
+        })
+      });
+
+      const data = await res.json();
+      
+      if (res.ok) {
+        await fetchRegistrations(); // Refresh registrations
+        return {
+          eventIds,
+          userId: user._id || '',
+          registrations: data.registrations || [],
+          totalEvents: data.totalEvents || eventIds.length,
+          successfulRegistrations: data.successfulRegistrations || 0,
+          failedRegistrations: data.failedRegistrations || []
+        };
+      } else {
+        return {
+          eventIds,
+          userId: user._id || '',
+          registrations: [],
+          totalEvents: eventIds.length,
+          successfulRegistrations: 0,
+          failedRegistrations: eventIds.map(id => ({ eventId: id, reason: data.error || 'Registration failed' }))
+        };
+      }
+    } catch (error) {
+      console.error('Multi-event registration failed:', error);
+      return {
+        eventIds,
+        userId: user._id || '',
+        registrations: [],
+        totalEvents: eventIds.length,
+        successfulRegistrations: 0,
+        failedRegistrations: eventIds.map(id => ({ eventId: id, reason: 'Network error' }))
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateQRCode = async (
+    qrData: string, 
+    eventId?: string, 
+    scannedBy?: string, 
+    location?: string
+  ): Promise<QRValidationResult> => {
+    try {
+      const res = await fetch('/api/qr/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          qrData, 
+          eventId, 
+          scannedBy, 
+          location 
+        })
+      });
+
+      const data = await res.json();
+      
+      if (res.ok) {
+        if (data.valid) {
+          await fetchRegistrations(); // Refresh registrations if scan was valid
+        }
+        return data;
+      } else {
+        return {
+          valid: false,
+          reason: data.reason || 'QR validation failed'
+        };
+      }
+    } catch (error) {
+      console.error('QR validation error:', error);
+      return {
+        valid: false,
+        reason: 'Network error during QR validation'
+      };
     }
   };
 
@@ -247,7 +355,9 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
     registrations,
     results,
     registerForEvent,
+    registerForMultipleEvents,
     unregisterFromEvent,
+    validateQRCode,
     createEvent,
     updateEvent,
     deleteEvent,

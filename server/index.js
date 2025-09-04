@@ -8,10 +8,122 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import QRCode from 'qrcode';
+import qrImage from 'qr-image';
+import { createCanvas, loadImage } from 'canvas';
+import crypto from 'crypto';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// QR Code Secret for signing
+const QR_SECRET = process.env.QR_CODE_SECRET || 'your_secure_qr_secret_key_change_in_production';
+
+// Utility functions for QR code generation and validation
+const generateQRSignature = (payload) => {
+  const data = `${payload.registration_id}:${payload.student_id}:${payload.event_id}:${payload.issued_at}`;
+  return crypto.createHmac('sha256', QR_SECRET).update(data).digest('hex');
+};
+
+const validateQRSignature = (payload) => {
+  const expectedSignature = generateQRSignature(payload);
+  return crypto.timingSafeEqual(
+    Buffer.from(payload.signature, 'hex'),
+    Buffer.from(expectedSignature, 'hex')
+  );
+};
+
+const generateUniqueRegistrationId = () => {
+  return crypto.randomBytes(16).toString('hex');
+};
+
+// Custom QR Code generator with event name overlay
+const generateQRCodeWithEventName = async (qrData, eventName, options = {}) => {
+  const {
+    size = 300,
+    fontSize = 14,
+    fontFamily = 'Arial',
+    fontWeight = 'bold',
+    maxChars = 40,
+    position = 'below',
+    backgroundColor = '#FFFFFF',
+    textColor = '#000000',
+    qrColor = '#000000'
+  } = options;
+
+  try {
+    // Truncate event name if too long
+    let displayName = eventName.length > maxChars 
+      ? eventName.substring(0, maxChars - 3) + '...' 
+      : eventName;
+
+    // Generate QR code as PNG buffer
+    const qrBuffer = qrImage.imageSync(qrData, { 
+      type: 'png', 
+      size: size / 4, // qr-image uses different sizing
+      margin: 1,
+      'parse-url': false
+    });
+
+    // Create canvas for combining QR with text
+    const padding = 20;
+    const textHeight = fontSize + 10;
+    const canvasHeight = position === 'below' ? size + textHeight + (padding * 2) : size + (padding * 2);
+    const canvasWidth = size + (padding * 2);
+
+    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const ctx = canvas.getContext('2d');
+
+    // Fill background
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Load and draw QR code
+    const qrImg = await loadImage(qrBuffer);
+    const qrX = padding;
+    const qrY = position === 'below' ? padding : padding + textHeight;
+    ctx.drawImage(qrImg, qrX, qrY, size, size);
+
+    // Draw event name text
+    ctx.fillStyle = textColor;
+    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const textX = canvasWidth / 2;
+    const textY = position === 'below' 
+      ? size + padding + (textHeight / 2)
+      : textHeight / 2;
+
+    // Add text background for better readability
+    const textMetrics = ctx.measureText(displayName);
+    const textWidth = textMetrics.width;
+    const textPadding = 8;
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fillRect(
+      textX - (textWidth / 2) - textPadding,
+      textY - (fontSize / 2) - 4,
+      textWidth + (textPadding * 2),
+      fontSize + 8
+    );
+
+    // Draw the text
+    ctx.fillStyle = textColor;
+    ctx.fillText(displayName, textX, textY);
+
+    // Convert to data URL
+    return canvas.toDataURL('image/png');
+  } catch (error) {
+    console.error('QR Code generation error:', error);
+    // Fallback to basic QR code without overlay
+    return await QRCode.toDataURL(qrData, {
+      width: size,
+      margin: 2,
+      color: { dark: qrColor, light: backgroundColor }
+    });
+  }
+};
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
@@ -54,80 +166,441 @@ const eventSchema = new mongoose.Schema({
 });
 const Event = mongoose.model('Event', eventSchema);
 
-// Registration Schema
+// Registration Schema - Enhanced for per-event QR codes
 const registrationSchema = new mongoose.Schema({
+  registrationId: { type: String, unique: true, required: true }, // Unique per registration
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
   registeredAt: { type: Date, default: Date.now },
-  status: { type: String, enum: ['registered', 'attended', 'absent'], default: 'registered' },
-  qrCode: { type: String }
+  status: { type: String, enum: ['registered', 'attended', 'absent', 'cancelled'], default: 'registered' },
+  qrCode: { type: String }, // Base64 QR code image
+  qrPayload: {
+    registration_id: String,
+    student_id: String,
+    event_id: String,
+    issued_at: String,
+    expires_at: String,
+    signature: String,
+    event_title: String,
+    student_name: String
+  },
+  scanLogs: [{
+    scannedAt: { type: Date, default: Date.now },
+    scannedBy: String,
+    location: String,
+    status: { type: String, enum: ['valid', 'invalid', 'expired', 'duplicate'], required: true },
+    notes: String
+  }]
 });
+
+// Ensure unique registration per student per event
+registrationSchema.index({ userId: 1, eventId: 1 }, { unique: true });
+
 const Registration = mongoose.model('Registration', registrationSchema);
-// Register for Event
+
+// Scan Log Schema for detailed tracking
+const scanLogSchema = new mongoose.Schema({
+  registrationId: { type: String, required: true },
+  scannedAt: { type: Date, default: Date.now },
+  scannedBy: String,
+  location: String,
+  status: { type: String, enum: ['valid', 'invalid', 'expired', 'duplicate'], required: true },
+  notes: String,
+  eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+});
+
+const ScanLog = mongoose.model('ScanLog', scanLogSchema);
+// Multi-Event Registration Endpoint
+app.post('/api/events/register-multiple', async (req, res) => {
+  try {
+    const { userId, eventIds } = req.body;
+    
+    if (!userId || !eventIds || !Array.isArray(eventIds) || eventIds.length === 0) {
+      return res.status(400).json({ error: 'Invalid request data' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const results = {
+      totalEvents: eventIds.length,
+      successfulRegistrations: 0,
+      failedRegistrations: [],
+      registrations: []
+    };
+
+    // Process each event registration
+    for (const eventId of eventIds) {
+      try {
+        // Check if already registered
+        const existingRegistration = await Registration.findOne({ userId, eventId });
+        if (existingRegistration) {
+          results.failedRegistrations.push({
+            eventId,
+            reason: 'Already registered for this event'
+          });
+          continue;
+        }
+
+        // Get event details
+        const event = await Event.findById(eventId);
+        if (!event) {
+          results.failedRegistrations.push({
+            eventId,
+            reason: 'Event not found'
+          });
+          continue;
+        }
+
+        // Check if event is full
+        if (event.currentParticipants >= event.maxParticipants) {
+          results.failedRegistrations.push({
+            eventId,
+            reason: 'Event is full'
+          });
+          continue;
+        }
+
+        // Check if registration deadline has passed
+        if (new Date() > new Date(event.registrationDeadline)) {
+          results.failedRegistrations.push({
+            eventId,
+            reason: 'Registration deadline has passed'
+          });
+          continue;
+        }
+
+        // Generate unique registration ID
+        const registrationId = generateUniqueRegistrationId();
+        const issuedAt = new Date().toISOString();
+        const expiresAt = new Date(event.date).toISOString(); // QR expires when event ends
+
+        // Create QR payload with signature
+        const qrPayload = {
+          registration_id: registrationId,
+          student_id: userId,
+          event_id: eventId,
+          issued_at: issuedAt,
+          expires_at: expiresAt,
+          signature: '', // Will be generated below
+          event_title: event.title,
+          student_name: user.name
+        };
+
+        // Generate cryptographic signature
+        qrPayload.signature = generateQRSignature(qrPayload);
+
+        // Generate QR code image with event name overlay
+        const qrCodeString = await generateQRCodeWithEventName(
+          JSON.stringify(qrPayload), 
+          event.title,
+          {
+            size: 300,
+            fontSize: 16,
+            fontFamily: 'Arial',
+            fontWeight: 'bold',
+            maxChars: 40,
+            position: 'below',
+            backgroundColor: '#FFFFFF',
+            textColor: '#000000',
+            qrColor: '#000000'
+          }
+        );
+
+        // Create registration record
+        const registration = new Registration({
+          registrationId,
+          userId,
+          eventId,
+          qrCode: qrCodeString,
+          qrPayload,
+          scanLogs: []
+        });
+
+        await registration.save();
+
+        // Update event participant count
+        event.currentParticipants += 1;
+        await event.save();
+
+        // Populate for response
+        const populatedRegistration = await Registration.findById(registration._id)
+          .populate('userId')
+          .populate('eventId');
+
+        const regObj = populatedRegistration.toObject();
+        regObj.user = regObj.userId;
+        regObj.event = regObj.eventId;
+        regObj.userId = regObj.userId._id;
+        regObj.eventId = regObj.eventId._id;
+        regObj.id = regObj._id;
+
+        results.registrations.push(regObj);
+        results.successfulRegistrations++;
+
+      } catch (error) {
+        console.error(`Registration error for event ${eventId}:`, error);
+        results.failedRegistrations.push({
+          eventId,
+          reason: 'Registration processing failed'
+        });
+      }
+    }
+
+    res.json(results);
+  } catch (err) {
+    console.error('Multi-event registration error:', err);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+// Single Event Registration (backwards compatibility)
 app.post('/api/events/:eventId/register', async (req, res) => {
   try {
     const { userId } = req.body;
     const eventId = req.params.eventId;
 
-    // Check if already registered
-    const existing = await Registration.findOne({ userId, eventId });
-    if (existing) {
-      return res.status(409).json({ error: 'Already registered for this event.' });
-    }
-
-    // Check if event is full
+    // Find the event
     const event = await Event.findById(eventId);
-    if (!event) return res.status(404).json({ error: 'Event not found.' });
-    if (event.currentParticipants >= event.maxParticipants) {
-      return res.status(400).json({ error: 'Event is full.' });
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Get user details
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: 'User not found.' });
+    // Check if user is already registered
+    const existingRegistration = await Registration.findOne({ 
+      userId, 
+      eventIds: eventId 
+    });
 
-    // Generate QR code data
-    const qrData = {
-      registrationId: new mongoose.Types.ObjectId().toString(),
-      userId: userId,
-      eventId: eventId,
-      userEmail: user.email,
-      userName: user.name,
-      eventTitle: event.title,
-      registeredAt: new Date().toISOString()
+    if (existingRegistration) {
+      return res.status(409).json({ error: 'Already registered for this event' });
+    }
+
+    // Check capacity
+    if (event.currentParticipants >= event.maxParticipants) {
+      return res.status(400).json({ error: 'Event is full' });
+    }
+
+    // Check registration deadline
+    if (new Date() > new Date(event.registrationDeadline)) {
+      return res.status(400).json({ error: 'Registration deadline has passed' });
+    }
+
+    // Create registration
+    const registrationId = generateUniqueRegistrationId();
+    const qrPayload = {
+      registrationId,
+      userId,
+      eventIds: [eventId],
+      timestamp: Date.now()
     };
 
-    // Generate QR code string
-    const qrCodeString = await QRCode.toDataURL(JSON.stringify(qrData));
+    const signature = generateQRSignature(qrPayload);
+    const qrData = JSON.stringify({ ...qrPayload, signature });
+    
+    // Generate QR code with event name overlay
+    const qrCodeUrl = await generateQRCodeWithEventName(
+      qrData,
+      event.title,
+      {
+        size: 300,
+        fontSize: 16,
+        fontFamily: 'Arial',
+        fontWeight: 'bold',
+        maxChars: 40,
+        position: 'below',
+        backgroundColor: '#FFFFFF',
+        textColor: '#000000',
+        qrColor: '#000000'
+      }
+    );
 
-    // Create registration with QR code
-    const registration = new Registration({ 
-      userId, 
-      eventId, 
-      qrCode: qrCodeString 
+    const registration = new Registration({
+      registrationId,
+      userId,
+      eventIds: [eventId],
+      qrCodeData: qrData,
+      qrCodeUrl,
+      registeredAt: new Date()
     });
+
     await registration.save();
 
     // Update event participant count
     event.currentParticipants += 1;
     await event.save();
 
-    // Populate user and event fields for frontend QR code and details
-    const populatedRegistration = await Registration.findById(registration._id)
-      .populate('userId')
-      .populate('eventId');
+    res.json({
+      success: true,
+      registration: {
+        id: registrationId,
+        event: event,
+        qrCode: qrCodeUrl,
+        registeredAt: registration.registeredAt
+      }
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
 
-    // Convert to expected frontend shape
-    const regObj = populatedRegistration.toObject();
-    regObj.user = regObj.userId;
-    regObj.event = regObj.eventId;
-    regObj.userId = regObj.userId._id;
-    regObj.eventId = regObj.eventId._id;
+// QR Code Validation Endpoint
+app.post('/api/qr/validate', async (req, res) => {
+  try {
+    const { qrData, eventId, scannedBy, location } = req.body;
+    
+    let qrPayload;
+    try {
+      qrPayload = JSON.parse(qrData);
+    } catch (error) {
+      return res.json({
+        valid: false,
+        reason: 'Invalid QR code format'
+      });
+    }
 
-    res.json({ registration: regObj });
+    // Validate required fields
+    if (!qrPayload.registration_id || !qrPayload.student_id || !qrPayload.event_id || !qrPayload.signature) {
+      return res.json({
+        valid: false,
+        reason: 'Missing required QR code fields'
+      });
+    }
+
+    // Validate signature
+    if (!validateQRSignature(qrPayload)) {
+      return res.json({
+        valid: false,
+        reason: 'Invalid QR code signature'
+      });
+    }
+
+    // Check if scanning for correct event
+    if (eventId && qrPayload.event_id !== eventId) {
+      return res.json({
+        valid: false,
+        reason: 'QR code is for a different event'
+      });
+    }
+
+    // Find the registration
+    const registration = await Registration.findOne({
+      registrationId: qrPayload.registration_id,
+      userId: qrPayload.student_id,
+      eventId: qrPayload.event_id
+    }).populate('userId').populate('eventId');
+
+    if (!registration) {
+      return res.json({
+        valid: false,
+        reason: 'Registration not found'
+      });
+    }
+
+    // Check if registration is active
+    if (registration.status === 'cancelled') {
+      return res.json({
+        valid: false,
+        reason: 'Registration has been cancelled'
+      });
+    }
+
+    // Check if QR code has expired
+    if (qrPayload.expires_at && new Date() > new Date(qrPayload.expires_at)) {
+      return res.json({
+        valid: false,
+        reason: 'QR code has expired'
+      });
+    }
+
+    // Check for duplicate scans (if already attended)
+    if (registration.status === 'attended') {
+      return res.json({
+        valid: false,
+        reason: 'Already marked as attended',
+        registration: {
+          ...registration.toObject(),
+          user: registration.userId,
+          event: registration.eventId,
+          userId: registration.userId._id,
+          eventId: registration.eventId._id,
+          id: registration._id
+        }
+      });
+    }
+
+    // Create scan log
+    const scanLog = {
+      scannedAt: new Date(),
+      scannedBy: scannedBy || 'system',
+      location: location || 'unknown',
+      status: 'valid',
+      notes: 'Valid scan - marked as attended'
+    };
+
+    // Update registration status and add scan log
+    registration.status = 'attended';
+    registration.scanLogs.push(scanLog);
+    await registration.save();
+
+    // Also create a standalone scan log for admin tracking
+    const standaloneScanLog = new ScanLog({
+      registrationId: registration.registrationId,
+      scannedAt: scanLog.scannedAt,
+      scannedBy: scanLog.scannedBy,
+      location: scanLog.location,
+      status: scanLog.status,
+      notes: scanLog.notes,
+      eventId: registration.eventId,
+      userId: registration.userId
+    });
+    await standaloneScanLog.save();
+
+    res.json({
+      valid: true,
+      registration: {
+        ...registration.toObject(),
+        user: registration.userId,
+        event: registration.eventId,
+        userId: registration.userId._id,
+        eventId: registration.eventId._id,
+        id: registration._id
+      },
+      scanLog
+    });
+
   } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ error: 'Registration failed.' });
+    console.error('QR validation error:', err);
+    res.status(500).json({ 
+      valid: false, 
+      reason: 'QR validation failed' 
+    });
+  }
+});
+
+// Get Scan Logs for Admin
+app.get('/api/scan-logs', async (req, res) => {
+  try {
+    const { eventId, userId, status } = req.query;
+    
+    let filter = {};
+    if (eventId) filter.eventId = eventId;
+    if (userId) filter.userId = userId;
+    if (status) filter.status = status;
+
+    const scanLogs = await ScanLog.find(filter)
+      .populate('eventId')
+      .populate('userId')
+      .sort({ scannedAt: -1 });
+
+    res.json({ scanLogs });
+  } catch (err) {
+    console.error('Error fetching scan logs:', err);
+    res.status(500).json({ error: 'Failed to fetch scan logs' });
   }
 });
 

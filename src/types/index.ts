@@ -36,13 +36,53 @@ export interface Event {
 
 export interface Registration {
   id: string;
+  registrationId: string; // Unique ID for each registration
   userId: string;
   eventId: string;
   user: User & { _id?: string };
   event: Event & { _id?: string };
   registeredAt: Date;
-  status: 'registered' | 'attended' | 'absent';
+  status: 'registered' | 'attended' | 'absent' | 'cancelled';
   qrCode?: string;
+  qrPayload?: QRPayload;
+  scanLogs?: ScanLog[];
+}
+
+export interface QRPayload {
+  registration_id: string;
+  student_id: string;
+  event_id: string;
+  issued_at: string;
+  expires_at?: string;
+  signature: string;
+  event_title?: string;
+  student_name?: string;
+}
+
+export interface ScanLog {
+  id: string;
+  registrationId: string;
+  scannedAt: Date;
+  scannedBy?: string;
+  location?: string;
+  status: 'valid' | 'invalid' | 'expired' | 'duplicate';
+  notes?: string;
+}
+
+export interface MultiEventRegistration {
+  eventIds: string[];
+  userId: string;
+  registrations: Registration[];
+  totalEvents: number;
+  successfulRegistrations: number;
+  failedRegistrations: { eventId: string; reason: string; }[];
+}
+
+export interface QRValidationResult {
+  valid: boolean;
+  registration?: Registration;
+  reason?: string;
+  scanLog?: ScanLog;
 }
 
 export interface Notification {
