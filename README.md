@@ -1,21 +1,22 @@
 
-# 🎉 Event Hub - College Event Management System
+# 🎉 EventHub - College Event Management System
 
-A modern, full-stack web application for managing college events, registrations, and user profiles. Built with React 18, TypeScript, Vite, Node.js/Express, MongoDB Atlas, and Tailwind CSS with advanced features like **multi-event QR code registration**, **QR scanner for attendance**, **bulk operations**, and **comprehensive user management**.
+A modern, full-stack web application for managing college events, registrations, and user profiles. Built with React 18, TypeScript, Vite, Node.js/Express, MongoDB Atlas, and Tailwind CSS with advanced features like **unified QR code scanning**, **multi-event registration**, **real-time attendance tracking**, and **comprehensive user management**.
 
 ---
 
 ## 🚀 Overview
-This comprehensive event management system streamlines college event organization, allowing admins and organizers to create, edit, and manage events while students can register, view details, and manage their profiles. The system features role-based authentication, **advanced QR code generation with event names**, **multi-event registration system**, **QR scanner for organizers**, bulk delete operations, real-time notifications, live image previews, profile picture uploads, and demo accounts for easy testing.
+EventHub is a comprehensive event management system that streamlines college event organization, allowing admins and organizers to create, edit, and manage events while students can register, view details, and manage their profiles. The system features role-based authentication, unified QR scanner interface, multi-event registration capabilities, bulk operations, real-time notifications, live image previews, profile picture uploads, and demo accounts for easy testing.
 
 ### 🎯 Key Highlights
 - **Modern Tech Stack:** React 18 + TypeScript + Vite for blazing-fast development
-- **Comprehensive Backend:** Node.js/Express with MongoDB Atlas cloud database
-- **Advanced QR System:** Multi-event registration with unique QR codes per event
+- **Robust Backend:** Node.js/Express with MongoDB Atlas and comprehensive error handling
+- **Advanced QR System:** Unified camera interface with multi-event QR code support
 - **QR Code Features:** Event names displayed on QR codes, secure HMAC-SHA256 signatures
-- **QR Scanner:** Built-in camera scanner for organizers and admins
+- **Unified QR Scanner:** Single camera interface with clean UX design
+- **Seamless Registration:** Smooth event registration system with multi-event support
 - **Mobile-First Design:** Responsive UI with Tailwind CSS
-- **Production Ready:** Optimized build process and error handling
+- **Production Ready:** Optimized build process with comprehensive testing
 
 ---
 
@@ -145,15 +146,16 @@ project/
 - **Event-Specific QR Codes:** Each registration generates a unique QR code per event
 - **Visual Event Identification:** Event names prominently displayed on QR images
 - **Canvas-Based Generation:** Custom QR generation with HTML5 Canvas and text overlays
-- **Security Features:**
-  - HMAC-SHA256 cryptographic signatures
-  - Timestamp validation and expiry
-  - Event-specific validation prevents cross-event usage
-- **QR Scanner Interface:**
+- **Unified QR Scanner Interface:**
+  - Clean, single camera window design
   - Camera-based scanning with HTML5 QR code reader
   - Manual entry fallback option
   - Real-time validation and feedback
   - Scan statistics and history tracking
+- **Security Features:**
+  - HMAC-SHA256 cryptographic signatures
+  - Timestamp validation and expiry
+  - Event-specific validation prevents cross-event usage
 - **Multi-Event Support:**
   - Register for multiple events simultaneously
   - Each event gets its own downloadable QR code
@@ -162,6 +164,10 @@ project/
   - QR Scanner page accessible to organizers and admins
   - Event selection dropdown for targeted scanning
   - Success/failure tracking with detailed reports
+- **Reliable Registration System:**
+  - Smooth event registration process
+  - Proper database integration
+  - Comprehensive error handling and validation
 
 ### 🔔 Notification System
 - **Toast Notifications:** Real-time feedback for user actions
@@ -791,6 +797,8 @@ A: Use your hosting platform's environment variable settings. Never commit `.env
 - [x] **Event Name on QR Codes** - Custom QR codes with event names
 - [x] **Role-based Scanner Access** - Organizers and admins can scan QR codes
 - [x] **Attendance Tracking** - Real-time attendance verification
+- [x] **Clean QR Scanner Interface** - Unified camera interface
+- [x] **Robust Registration System** - Reliable event registration
 
 ### Planned Features
 - [ ] **Real-time Notifications** - WebSocket integration

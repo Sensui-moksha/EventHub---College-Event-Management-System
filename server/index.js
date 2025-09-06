@@ -363,6 +363,12 @@ app.post('/api/events/:eventId/register', async (req, res) => {
     const { userId } = req.body;
     const eventId = req.params.eventId;
 
+    // Find the user first
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     // Find the event
     const event = await Event.findById(eventId);
     if (!event) {
@@ -372,7 +378,7 @@ app.post('/api/events/:eventId/register', async (req, res) => {
     // Check if user is already registered
     const existingRegistration = await Registration.findOne({ 
       userId, 
-      eventIds: eventId 
+      eventId: eventId 
     });
 
     if (existingRegistration) {
@@ -421,9 +427,18 @@ app.post('/api/events/:eventId/register', async (req, res) => {
     const registration = new Registration({
       registrationId,
       userId,
-      eventIds: [eventId],
-      qrCodeData: qrData,
-      qrCodeUrl,
+      eventId: eventId,
+      qrCode: qrCodeUrl,
+      qrPayload: {
+        registration_id: registrationId,
+        student_id: userId,
+        event_id: eventId,
+        issued_at: new Date().toISOString(),
+        expires_at: new Date(event.date).toISOString(),
+        signature: signature,
+        event_title: event.title,
+        student_name: user.name
+      },
       registeredAt: new Date()
     });
 
@@ -612,15 +627,17 @@ app.get('/api/registrations', async (req, res) => {
       .populate('eventId');
     
     // Convert to expected frontend shape
-    const formattedRegistrations = registrations.map(reg => {
-      const regObj = reg.toObject();
-      regObj.user = regObj.userId;
-      regObj.event = regObj.eventId;
-      regObj.userId = regObj.userId._id;
-      regObj.eventId = regObj.eventId._id;
-      regObj.id = regObj._id;
-      return regObj;
-    });
+    const formattedRegistrations = registrations
+      .filter(reg => reg.userId && reg.eventId) // Filter out registrations with missing user or event
+      .map(reg => {
+        const regObj = reg.toObject();
+        regObj.user = regObj.userId;
+        regObj.event = regObj.eventId;
+        regObj.userId = regObj.userId._id;
+        regObj.eventId = regObj.eventId._id;
+        regObj.id = regObj._id;
+        return regObj;
+      });
     
     res.json({ registrations: formattedRegistrations });
   } catch (err) {
@@ -675,7 +692,8 @@ app.post('/api/register', async (req, res) => {
     delete userObj.password;
     res.json({ user: userObj });
   } catch (err) {
-    res.status(500).json({ error: 'Registration failed.' });
+    console.error('Registration error details:', err);
+    res.status(500).json({ error: 'Registration failed.', details: err.message });
   }
 });
 
