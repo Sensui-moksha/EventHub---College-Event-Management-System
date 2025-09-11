@@ -68,7 +68,7 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
           // Process event dates to ensure they're proper Date objects
           const processedEvents = eventList.map((event: any) => ({
             ...event,
-            id: event.id,
+            id: event._id || event.id, // Use _id from MongoDB, fallback to id
             date: new Date(event.date),
             registrationDeadline: new Date(event.registrationDeadline),
             createdAt: new Date(event.createdAt)
@@ -94,9 +94,16 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
     if (!user) return false;
     setLoading(true);
     try {
-      // Always use _id for backend
-      const event = events.find(e => e.id === eventId || (e as any)._id === eventId);
-      const backendEventId = (event && (event as any)._id) ? (event as any)._id : eventId;
+      const event = events.find(e => e.id === eventId);
+      if (!event) {
+        console.error('Event not found:', eventId);
+        return false;
+      }
+
+      // Use the original _id for the backend API call
+      const backendEventId = (event as any)._id || event.id;
+      console.log('Registering for event:', { eventId, backendEventId, event });
+
       const res = await fetch(`/api/events/${backendEventId}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -104,7 +111,7 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
       });
       const data = await res.json();
       if (res.ok && data.registration) {
-        await fetchRegistrations(); // Always refetch after register
+        await fetchRegistrations();
         return true;
       }
       return false;
@@ -226,9 +233,15 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
     if (!user) return false;
     setLoading(true);
     try {
-      // Always use _id for backend
-      const event = events.find(e => e.id === eventId || (e as any)._id === eventId);
-      const backendEventId = (event && (event as any)._id) ? (event as any)._id : eventId;
+      const event = events.find(e => e.id === eventId);
+      if (!event) {
+        console.error('Event not found:', eventId);
+        return false;
+      }
+
+      // Use the original _id for the backend API call
+      const backendEventId = (event as any)._id || event.id;
+
       const res = await fetch(`/api/events/${backendEventId}/unregister`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -236,7 +249,7 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        await fetchRegistrations(); // Always refetch after unregister
+        await fetchRegistrations();
         return true;
       }
       return false;
@@ -287,8 +300,8 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
       });
       const data = await res.json();
       if (res.ok && data.event) {
-        const event = { ...data.event, id: data.event._id };
-        setEvents(prev => prev.map(e => e.id === eventId ? event : e));
+        const updatedEvent = { ...data.event, id: data.event._id };
+        setEvents(prev => prev.map(e => e.id === eventId ? updatedEvent : e));
         return true;
       }
       if (data.error) {

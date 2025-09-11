@@ -435,19 +435,16 @@ const EventDetails: React.FC = () => {
                       alt="QR Code" 
                       className="w-44 h-44 object-contain"
                     />
-                  ) : (
+                  ) : userRegistration.qrPayload ? (
                     <QRCodeSVG
-                      value={JSON.stringify({
-                        registrationId: userRegistration.id,
-                        userId: userRegistration.user?.id || userRegistration.userId,
-                        name: userRegistration.user?.name || 'Unknown',
-                        email: userRegistration.user?.email || 'Unknown',
-                        eventId: userRegistration.event?.id || userRegistration.eventId,
-                        eventTitle: userRegistration.event?.title || event.title,
-                        registeredAt: userRegistration.registeredAt,
-                      })}
+                      value={JSON.stringify(userRegistration.qrPayload)}
                       size={180}
                     />
+                  ) : (
+                    <div className="text-center text-gray-500">
+                      <QrCode className="w-16 h-16 mx-auto mb-2" />
+                      <p>QR Code not available</p>
+                    </div>
                   )}
                 </div>
                 {userRegistration.qrCode && (

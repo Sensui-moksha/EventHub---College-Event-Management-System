@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats, Html5Qrcode } from 'html5-qrcode';
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { useEvents } from '../contexts/EventContext';
 import { useToast } from './ui/Toast';
 import { QRValidationResult } from '../types';
@@ -409,7 +409,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
         scannerElementId,
         {
           fps: 10,
-          qrbox: { width: 280, height: 280 },
+          qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
           rememberLastUsedCamera: true,
           showTorchButtonIfSupported: true,
@@ -425,22 +425,27 @@ const QRScanner: React.FC<QRScannerProps> = ({
             Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.EAN_8,
             Html5QrcodeSupportedFormats.DATA_MATRIX
-          ]
+          ],
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+          }
         },
-        false // verbose logging disabled
+        true // Enable verbose logging for debugging
       );
 
       scannerRef.current.render(
         (decodedText, decodedResult) => {
           console.log('QR Code detected:', decodedText);
-          console.log('QR Result:', decodedResult);
+          console.log('QR Result object:', decodedResult);
+          // decodedResult.format does not exist on Html5QrcodeResult
           handleQRScan(decodedText);
         },
         (error) => {
           // Only log meaningful errors, not scanning attempts
           if (!error.toString().includes('QR code parse error') && 
               !error.toString().includes('No QR code found') &&
-              !error.toString().includes('NotFoundException')) {
+              !error.toString().includes('NotFoundException') &&
+              !error.toString().includes('NotFoundError')) {
             console.warn('QR Scanner error:', error);
           }
         }
@@ -459,7 +464,21 @@ const QRScanner: React.FC<QRScannerProps> = ({
 
   const handleQRScan = async (qrData: string) => {
     try {
+      console.log('Raw QR Data scanned:', qrData);
+      console.log('QR Data length:', qrData.length);
+      console.log('QR Data type:', typeof qrData);
+      
+      // Try to parse the QR data to see if it's valid JSON
+      try {
+        const parsed = JSON.parse(qrData);
+        console.log('Parsed QR Data:', parsed);
+        console.log('QR Data fields:', Object.keys(parsed));
+      } catch (parseError: any) {
+        console.log('QR Data is not JSON:', parseError.message);
+      }
+      
       const result = await validateQRCode(qrData, eventId, scannedBy, location);
+      console.log('Validation result:', result);
       setScanResult(result);
       
       if (result.valid) {
@@ -498,6 +517,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
       return;
     }
 
+    console.log('Manual QR Data:', manualQRData);
     await handleQRScan(manualQRData);
     setManualQRData('');
   };

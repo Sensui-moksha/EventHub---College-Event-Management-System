@@ -26,11 +26,16 @@ const generateQRSignature = (payload) => {
 };
 
 const validateQRSignature = (payload) => {
-  const expectedSignature = generateQRSignature(payload);
-  return crypto.timingSafeEqual(
-    Buffer.from(payload.signature, 'hex'),
-    Buffer.from(expectedSignature, 'hex')
-  );
+  try {
+    const expectedSignature = generateQRSignature(payload);
+    return crypto.timingSafeEqual(
+      Buffer.from(payload.signature, 'hex'),
+      Buffer.from(expectedSignature, 'hex')
+    );
+  } catch (error) {
+    console.log('Signature validation error:', error.message);
+    return false;
+  }
 };
 
 const generateUniqueRegistrationId = () => {
@@ -468,10 +473,20 @@ app.post('/api/qr/validate', async (req, res) => {
   try {
     const { qrData, eventId, scannedBy, location } = req.body;
     
+    console.log('QR Validation Request:');
+    console.log('- QR Data received:', qrData);
+    console.log('- QR Data length:', qrData?.length);
+    console.log('- Event ID:', eventId);
+    console.log('- Scanned by:', scannedBy);
+    console.log('- Location:', location);
+    
     let qrPayload;
     try {
       qrPayload = JSON.parse(qrData);
+      console.log('- Parsed QR Payload:', qrPayload);
+      console.log('- QR Payload fields:', Object.keys(qrPayload));
     } catch (error) {
+      console.log('- QR Data parsing failed:', error.message);
       return res.json({
         valid: false,
         reason: 'Invalid QR code format'
@@ -479,23 +494,31 @@ app.post('/api/qr/validate', async (req, res) => {
     }
 
     // Validate required fields
-    if (!qrPayload.registration_id || !qrPayload.student_id || !qrPayload.event_id || !qrPayload.signature) {
+    const requiredFields = ['registration_id', 'student_id', 'event_id', 'signature'];
+    const missingFields = requiredFields.filter(field => !qrPayload[field]);
+    
+    if (missingFields.length > 0) {
+      console.log('- Missing required fields:', missingFields);
       return res.json({
         valid: false,
-        reason: 'Missing required QR code fields'
+        reason: `Missing required QR code fields: ${missingFields.join(', ')}`
       });
     }
 
     // Validate signature
+    console.log('- Validating signature...');
     if (!validateQRSignature(qrPayload)) {
+      console.log('- Signature validation failed');
       return res.json({
         valid: false,
         reason: 'Invalid QR code signature'
       });
     }
+    console.log('- Signature validation passed');
 
     // Check if scanning for correct event
     if (eventId && qrPayload.event_id !== eventId) {
+      console.log(`- Event ID mismatch: expected ${eventId}, got ${qrPayload.event_id}`);
       return res.json({
         valid: false,
         reason: 'QR code is for a different event'
