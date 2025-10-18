@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEvents } from '../contexts/EventContext';
 import { useToast } from '../components/ui/Toast';
@@ -18,13 +18,45 @@ import {
 
 const CreateEvent: React.FC = () => {
   const { user } = useAuth();
-  const { createEvent, updateEvent, loading } = useEvents();
+  const { events, createEvent, updateEvent, loading } = useEvents();
   const { addToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { id } = useParams<{ id: string }>();
 
-  // If editing, event data will be in location.state.event
-  const editingEvent = location.state?.event;
+  // Check if we're in edit mode (either from URL params or location state)
+  const isEditMode = !!id || !!location.state?.event;
+  const editingEvent = location.state?.event || (id ? events.find(e => e.id === id || (e as any)._id === id) : null);
+
+  // If we're in edit mode via URL but haven't found the event yet, show loading
+  if (id && !editingEvent && events.length === 0 && !loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading event details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If we're in edit mode but the event doesn't exist
+  if (id && !editingEvent && events.length > 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h2>
+          <p className="text-gray-600 mb-4">The event you're trying to edit doesn't exist or may have been deleted.</p>
+          <button
+            onClick={() => navigate('/events')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Back to Events
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const [formData, setFormData] = useState({
     title: editingEvent?.title || '',
@@ -41,6 +73,32 @@ const CreateEvent: React.FC = () => {
     status: editingEvent?.status || 'upcoming',
   });
   const [imagePreview, setImagePreview] = useState<string>('');
+
+  // Load event data if editing via URL parameter
+  useEffect(() => {
+    if (id && !editingEvent && events.length > 0) {
+      const event = events.find(e => e.id === id || (e as any)._id === id);
+      if (event) {
+        setFormData({
+          title: event.title,
+          description: event.description,
+          category: event.category,
+          date: new Date(event.date).toISOString().slice(0, 10),
+          time: event.time,
+          venue: event.venue,
+          maxParticipants: event.maxParticipants,
+          image: event.image,
+          requirements: event.requirements || [''],
+          prizes: event.prizes || [''],
+          registrationDeadline: new Date(event.registrationDeadline).toISOString().slice(0, 10),
+          status: event.status,
+        });
+        if (event.image) {
+          setImagePreview(event.image);
+        }
+      }
+    }
+  }, [id, editingEvent, events]);
 
   const categories = [
     { value: 'technical', label: 'Technical' },
@@ -88,9 +146,13 @@ const CreateEvent: React.FC = () => {
 
     let success = false;
     let errorMsg = '';
-    if (editingEvent) {
+    
+    if (isEditMode) {
       // Editing existing event
-      success = await updateEvent(editingEvent.id, eventData);
+      const eventId = editingEvent?.id || editingEvent?._id || id;
+      if (eventId) {
+        success = await updateEvent(eventId, eventData);
+      }
     } else {
       // Creating new event
       try {
@@ -105,14 +167,14 @@ const CreateEvent: React.FC = () => {
     if (success) {
       addToast({
         type: 'success',
-        title: editingEvent ? 'Event Updated!' : 'Event Created!',
-        message: editingEvent ? 'Your event has been updated successfully.' : 'Your event has been created successfully.',
+        title: isEditMode ? 'Event Updated!' : 'Event Created!',
+        message: isEditMode ? 'Your event has been updated successfully.' : 'Your event has been created successfully.',
       });
-      navigate('/dashboard');
+      navigate(isEditMode ? `/events/${id || editingEvent?.id || editingEvent?._id}` : '/dashboard');
     } else {
       addToast({
         type: 'error',
-        title: editingEvent ? 'Update Failed' : 'Creation Failed',
+        title: isEditMode ? 'Update Failed' : 'Creation Failed',
         message: errorMsg ? errorMsg : 'Please try again later.',
       });
     }
@@ -189,6 +251,7 @@ const CreateEvent: React.FC = () => {
     }));
   };
 
+  // Check user permissions
   if (!user || (user.role !== 'admin' && user.role !== 'organizer')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -206,8 +269,31 @@ const CreateEvent: React.FC = () => {
     );
   }
 
+  // Additional check for editing: ensure user can edit this event
+  if (isEditMode && editingEvent && user.role !== 'admin') {
+    const eventOrgId = editingEvent.organizerId || editingEvent.organizer?.id || editingEvent.organizer?._id;
+    const userId = user.id || user._id;
+    
+    if (eventOrgId !== userId) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+            <p className="text-gray-600 mb-4">You can only edit events that you created.</p>
+            <button
+              onClick={() => navigate('/events')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Back to Events
+            </button>
+          </div>
+        </div>
+      );
+    }
+  }
+
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen pt-24 pb-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -220,7 +306,7 @@ const CreateEvent: React.FC = () => {
           </button>
           
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {editingEvent ? 'Edit Event' : 'Create New Event'}
+            {isEditMode ? 'Edit Event' : 'Create New Event'}
           </h1>
           <p className="text-gray-600">
             {editingEvent ? 'Update the details below to edit your event.' : 'Fill in the details below to create an amazing event for your college community.'}
@@ -504,7 +590,7 @@ const CreateEvent: React.FC = () => {
               disabled={loading}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
-              {loading ? (editingEvent ? 'Updating Event...' : 'Creating Event...') : (editingEvent ? 'Update Event' : 'Create Event')}
+              {loading ? (isEditMode ? 'Updating Event...' : 'Creating Event...') : (isEditMode ? 'Update Event' : 'Create Event')}
             </button>
           </div>
         </form>

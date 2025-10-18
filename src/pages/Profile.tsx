@@ -225,18 +225,18 @@ const Profile: React.FC = () => {
   };
 
   const departments = [
-    'Computer Science',
-    'Information Technology',
-    'Electronics',
+    'CSE',
+    'IT',
+    'AI & DS',
+    'AI & ML',
+    'ECE',
+    'EEE',
     'Mechanical',
     'Civil',
-    'Electrical',
-    'Chemical',
-    'Biotechnology',
   ];
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen pt-24 pb-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
           {/* Header */}

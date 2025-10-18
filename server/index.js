@@ -5,6 +5,7 @@ dotenv.config();
 
 import express from 'express';
 import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import QRCode from 'qrcode';
@@ -130,9 +131,45 @@ const generateQRCodeWithEventName = async (qrData, eventName, options = {}) => {
   }
 };
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// ...existing code...
+
+// Resilient MongoDB connection: try Atlas -> local -> in-memory (dev)
+const connectWithFallback = async () => {
+  const atlasUri = process.env.MONGODB_URI;
+  const localUri = process.env.MONGODB_LOCAL_URI || 'mongodb://127.0.0.1:27017/project-expo';
+
+  const tryConnect = async (uri) => {
+    try {
+      await mongoose.connect(uri, { connectTimeoutMS: 10000 });
+      console.log(`MongoDB connected to ${uri}`);
+      return true;
+    } catch (err) {
+      console.error(`MongoDB connection error to ${uri}:`, err.message || err);
+      return false;
+    }
+  };
+
+  if (atlasUri) {
+    const ok = await tryConnect(atlasUri);
+    if (ok) return;
+  }
+
+  // Try local MongoDB
+  if (await tryConnect(localUri)) return;
+
+  // Fallback to in-memory MongoDB for development
+  try {
+    console.log('Starting in-memory MongoDB server (mongodb-memory-server)');
+    const mongod = await MongoMemoryServer.create();
+    const uri = mongod.getUri();
+    await mongoose.connect(uri);
+    console.log('MongoDB connected to in-memory server');
+  } catch (err) {
+    console.error('Failed to start in-memory MongoDB server:', err);
+  }
+};
+
+connectWithFallback();
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -283,28 +320,51 @@ app.post('/api/events/register-multiple', async (req, res) => {
         const issuedAt = new Date().toISOString();
         const expiresAt = new Date(event.date).toISOString(); // QR expires when event ends
 
-        // Create QR payload with signature
+        // Create readable QR code content in list format
+        const qrContent = `EVENT REGISTRATION DETAILS
+═══════════════════════════════════
+📋 Registration ID: ${registrationId}
+👤 Name: ${user.name}
+📧 Email: ${user.email}
+🏫 Department: ${user.department}
+📚 Section: ${user.section || 'A'}
+📅 Year: ${user.year}
+🆔 Reg ID: ${user.regId || registrationId.substring(0, 8).toUpperCase()}
+🎯 Event: ${event.title}
+📍 Venue: ${event.venue}
+📅 Event Date: ${new Date(event.date).toLocaleDateString()}
+⏰ Time: ${event.time}
+✅ Registered At: ${new Date(issuedAt).toLocaleDateString()} ${new Date(issuedAt).toLocaleTimeString()}
+═══════════════════════════════════
+EventHub - College Event Management`;
+
+        // Also create JSON payload for backend validation (stored in DB but not in QR)
         const qrPayload = {
-          registration_id: registrationId,
-          student_id: userId,
-          event_id: eventId,
-          issued_at: issuedAt,
-          expires_at: expiresAt,
-          signature: '', // Will be generated below
+          registrationId: registrationId,
+          userId: userId,
+          eventIds: [eventId],
+          timestamp: Date.now(),
+          name: user.name,
+          email: user.email,
+          department: user.department,
+          section: user.section || 'A',
+          year: user.year,
+          regId: user.regId || registrationId.substring(0, 8).toUpperCase(),
+          registeredAt: issuedAt,
           event_title: event.title,
-          student_name: user.name
+          student_name: user.name,
+          event_venue: event.venue,
+          event_date: new Date(event.date).toLocaleDateString(),
+          event_time: event.time
         };
 
-        // Generate cryptographic signature
-        qrPayload.signature = generateQRSignature(qrPayload);
-
-        // Generate QR code image with event name overlay
+        // Generate QR code image with readable text content
         const qrCodeString = await generateQRCodeWithEventName(
-          JSON.stringify(qrPayload), 
+          qrContent, 
           event.title,
           {
-            size: 300,
-            fontSize: 16,
+            size: 400, // Larger size for better readability
+            fontSize: 14,
             fontFamily: 'Arial',
             fontWeight: 'bold',
             maxChars: 40,
@@ -400,25 +460,63 @@ app.post('/api/events/:eventId/register', async (req, res) => {
       return res.status(400).json({ error: 'Registration deadline has passed' });
     }
 
-    // Create registration
+    // Create registration with readable QR content
     const registrationId = generateUniqueRegistrationId();
+    const issuedAt = new Date().toISOString();
+    
+    // Create readable QR code content in list format
+    const qrContent = `EVENT REGISTRATION DETAILS
+═══════════════════════════════════
+📋 Registration ID: ${registrationId}
+👤 Name: ${user.name}
+📧 Email: ${user.email}
+🏫 Department: ${user.department}
+📚 Section: ${user.section || 'A'}
+📅 Year: ${user.year}
+🆔 Reg ID: ${user.regId || registrationId.substring(0, 8).toUpperCase()}
+🎯 Event: ${event.title}
+📍 Venue: ${event.venue}
+📅 Event Date: ${new Date(event.date).toLocaleDateString()}
+⏰ Time: ${event.time}
+✅ Registered At: ${new Date(issuedAt).toLocaleDateString()} ${new Date(issuedAt).toLocaleTimeString()}
+═══════════════════════════════════
+EventHub - College Event Management`;
+
+    // Create JSON payload for backend storage (not included in QR)
     const qrPayload = {
       registrationId,
       userId,
       eventIds: [eventId],
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      name: user.name,
+      email: user.email,
+      department: user.department,
+      section: user.section || 'A',
+      year: user.year,
+      regId: user.regId || registrationId.substring(0, 8).toUpperCase(),
+      registeredAt: issuedAt,
+      event_title: event.title,
+      student_name: user.name,
+      event_venue: event.venue,
+      event_date: new Date(event.date).toLocaleDateString(),
+      event_time: event.time
     };
-
-    const signature = generateQRSignature(qrPayload);
-    const qrData = JSON.stringify({ ...qrPayload, signature });
     
-    // Generate QR code with event name overlay
+    // Generate signature for QR payload security
+    const signature = generateQRSignature({
+      registration_id: registrationId,
+      student_id: userId,
+      event_id: eventId,
+      issued_at: issuedAt
+    });
+    
+    // Generate QR code with readable content
     const qrCodeUrl = await generateQRCodeWithEventName(
-      qrData,
+      qrContent,
       event.title,
       {
-        size: 300,
-        fontSize: 16,
+        size: 400, // Larger size for better readability
+        fontSize: 14,
         fontFamily: 'Arial',
         fontWeight: 'bold',
         maxChars: 40,
@@ -434,16 +532,7 @@ app.post('/api/events/:eventId/register', async (req, res) => {
       userId,
       eventId: eventId,
       qrCode: qrCodeUrl,
-      qrPayload: {
-        registration_id: registrationId,
-        student_id: userId,
-        event_id: eventId,
-        issued_at: new Date().toISOString(),
-        expires_at: new Date(event.date).toISOString(),
-        signature: signature,
-        event_title: event.title,
-        student_name: user.name
-      },
+      qrPayload: { ...qrPayload, signature },
       registeredAt: new Date()
     });
 
@@ -472,7 +561,7 @@ app.post('/api/events/:eventId/register', async (req, res) => {
 app.post('/api/qr/validate', async (req, res) => {
   try {
     const { qrData, eventId, scannedBy, location } = req.body;
-    
+
     console.log('QR Validation Request:');
     console.log('- QR Data received:', qrData);
     console.log('- QR Data length:', qrData?.length);
@@ -493,7 +582,6 @@ app.post('/api/qr/validate', async (req, res) => {
       });
     }
 
-    // Validate required fields
     const requiredFields = ['registration_id', 'student_id', 'event_id', 'signature'];
     const missingFields = requiredFields.filter(field => !qrPayload[field]);
     
@@ -690,6 +778,50 @@ app.post('/api/events/:eventId/unregister', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Unregistration failed.' });
+  }
+});
+
+// Admin/Organizer: Remove participant from event
+app.post('/api/events/:eventId/remove-participant', async (req, res) => {
+  try {
+    const { userId, removedBy } = req.body;
+    const eventId = req.params.eventId;
+
+    // Find the user who is making the request (removedBy)
+    const remover = await User.findById(removedBy);
+    if (!remover) {
+      return res.status(403).json({ error: 'Unauthorized: User not found.' });
+    }
+
+    // Check if user has admin or organizer permissions
+    if (remover.role !== 'admin' && remover.role !== 'organizer') {
+      return res.status(403).json({ error: 'Unauthorized: Only admins and organizers can remove participants.' });
+    }
+
+    // Find and remove the registration
+    const registration = await Registration.findOneAndDelete({ userId, eventId });
+    if (!registration) {
+      return res.status(404).json({ error: 'Registration not found.' });
+    }
+
+    // Update event participant count
+    const event = await Event.findById(eventId);
+    if (event && event.currentParticipants > 0) {
+      event.currentParticipants -= 1;
+      await event.save();
+    }
+
+    // Get user info for logging
+    const removedUser = await User.findById(userId);
+    console.log(`Admin/Organizer ${remover.name} (${remover.email}) removed participant ${removedUser?.name} (${removedUser?.email}) from event ${event?.title}`);
+
+    res.json({ 
+      success: true, 
+      message: `Participant ${removedUser?.name} removed from event successfully.` 
+    });
+  } catch (err) {
+    console.error('Error removing participant:', err);
+    res.status(500).json({ error: 'Failed to remove participant.' });
   }
 });
 
@@ -947,6 +1079,7 @@ app.post('/api/events', async (req, res) => {
       registrationDeadline
     });
     await event.save();
+    // No email sending in this build - registration handled and returned above
     res.status(201).json({ event });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -1006,5 +1139,5 @@ app.get('/', (req, res) => {
   res.send('API is running');
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

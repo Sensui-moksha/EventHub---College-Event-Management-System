@@ -184,6 +184,40 @@ project/
 
 ---
 
+## 🌐 Cross-Platform Compatibility
+
+**EventHub works seamlessly on all major platforms:**
+- ✅ **Windows** (10/11)
+- ✅ **macOS** (10.15+)
+- ✅ **Linux** (Ubuntu, Debian, Fedora, etc.)
+
+### Quick Start Scripts
+
+**Windows:**
+```cmd
+REM Install dependencies
+install-windows.bat
+
+REM Start the application
+start-windows.bat
+```
+
+**macOS/Linux:**
+```bash
+# Make scripts executable (one-time setup)
+chmod +x install.sh start.sh
+
+# Install dependencies
+./install.sh
+
+# Start the application
+./start.sh
+```
+
+📖 **For detailed platform-specific instructions, see [CROSS_PLATFORM_SETUP.md](./CROSS_PLATFORM_SETUP.md)**
+
+---
+
 ## 🛠️ Installation & Setup Guide
 
 ### 📋 Prerequisites
@@ -664,14 +698,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 #### **Core Contributors**
 -**[Mokshyagna yadav](https://github.com/Sensui-moksha)**
-
-- **[Bhavya Sree](https://github.com/bhavyasree1076)**
-
-- **[Naseem](https://github.com/NaseemShaik-Mic)**
-
-- **[Deekshitha](https://github.com/deekshithapavuluri17)**
-
-- **[Malinsheema](https://github.com/malin999sheema)**
 
 ### 🤝 **Team Collaboration**
 This project was built through collaborative effort using modern development practices:

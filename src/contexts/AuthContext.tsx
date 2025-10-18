@@ -7,6 +7,7 @@ interface AuthContextType {
   register: (userData: Omit<User, 'id' | 'createdAt'> & { password: string }) => Promise<{ success: boolean; error?: string }>;
   updateProfile: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  refreshUserData: () => Promise<void>;
   logout: () => void;
   loading: boolean;
   // Admin privilege: delete user
@@ -31,6 +32,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const parseResponse = async (res: Response) => {
+    const text = await res.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      return { _rawText: text };
+    }
+  };
+
+  // Function to refresh user data from server
+  const refreshUserData = async () => {
+    if (!user || !user._id) return;
+    try {
+      const res = await fetch(`/api/users/${user._id}`);
+      const data = await parseResponse(res);
+      if (res.ok && data.user) {
+        const updatedUser = { ...data.user };
+        if (!updatedUser.id) updatedUser.id = updatedUser._id;
+        if (!updatedUser._id) updatedUser._id = updatedUser.id;
+        if (updatedUser.createdAt) {
+          updatedUser.createdAt = new Date(updatedUser.createdAt);
+        }
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+    }
+  };
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -41,7 +73,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(parsed);
     }
     setLoading(false);
-  }, []);
+
+    // Set up immediate auto-refresh for user data every 10 seconds
+    const userRefreshInterval = setInterval(() => {
+      if (user) {
+        refreshUserData();
+      }
+    }, 1000);
+
+    // Set up visibility change listener to refresh when tab becomes active
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        refreshUserData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      clearInterval(userRefreshInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user?._id]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
@@ -51,16 +105,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
-      if (res.ok && data.user) {
+      const data = await parseResponse(res);
+      if (!res.ok) {
+        console.error('Login API error:', res.status, data);
+        return false;
+      }
+      if (data && data.user) {
         // Map _id to id for frontend compatibility, but keep _id for backend ops
         const user = { ...data.user };
         if (!user.id) user.id = user._id;
         if (!user._id) user._id = user.id;
         setUser(user);
         localStorage.setItem('user', JSON.stringify(user));
+        // Immediate refresh after login to get latest user data
+        setTimeout(() => refreshUserData(), 100);
         return true;
       }
+      console.warn('Login response unexpected:', data);
       return false;
     } catch (error) {
       console.error('Login failed:', error);
@@ -78,19 +139,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
       });
-      const data = await res.json();
-      if (res.ok && data.user) {
+      const data = await parseResponse(res);
+      if (!res.ok) {
+        if (res.status === 409) {
+          return { success: false, error: 'Account already exists with this email.' };
+        }
+        console.error('Register API error:', res.status, data);
+        return { success: false, error: data?.error || 'Registration failed.' };
+      }
+      if (data && data.user) {
         const user = { ...data.user };
         if (!user.id) user.id = user._id;
         if (!user._id) user._id = user.id;
         setUser(user);
         localStorage.setItem('user', JSON.stringify(user));
+        // Immediate refresh after registration to get latest user data
+        setTimeout(() => refreshUserData(), 100);
         return { success: true };
       }
-      if (res.status === 409) {
-        return { success: false, error: 'Account already exists with this email.' };
-      }
-      return { success: false, error: data.error || 'Registration failed.' };
+      console.warn('Register response unexpected:', data);
+      return { success: false, error: 'Registration failed.' };
     } catch (error) {
       console.error('Registration failed:', error);
       return { success: false, error: 'Registration failed.' };
@@ -116,6 +184,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (!updatedUser._id) updatedUser._id = updatedUser.id;
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Auto-refresh user data after successful update
+        await refreshUserData();
         return { success: true };
       }
       return { success: false, error: data.error || 'Profile update failed.' };
@@ -139,6 +209,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        // Immediate refresh after password change to get latest user data
+        setTimeout(() => refreshUserData(), 100);
         return { success: true };
       }
       return { success: false, error: data.error || 'Password change failed.' };
@@ -179,6 +251,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     updateProfile,
     changePassword,
+    refreshUserData,
     logout,
     loading,
     deleteUser,

@@ -33,14 +33,14 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
 
   const departments = [
-    'Computer Science',
-    'Information Technology',
-    'Electronics',
+    'CSE',
+    'IT',
+    'AI & DS',
+    'AI & ML',
+    'ECE',
+    'EEE',
     'Mechanical',
     'Civil',
-    'Electrical',
-    'Chemical',
-    'Biotechnology',
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {

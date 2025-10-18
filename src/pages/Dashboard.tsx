@@ -18,6 +18,7 @@ import {
   X
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -28,8 +29,38 @@ const Dashboard: React.FC = () => {
   // Multi-select for My Events
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  // QR Code state
+  const [showQRCode, setShowQRCode] = useState<string | null>(null);
 
   if (!user) return null;
+
+  // Helper function to create QR-friendly data with user information
+  const getQRValue = (registration: any) => {
+    // Create a structured QR code with user information - event name and reg ID first
+    const qrData = {
+      regId: registration.registrationId || registration.id || 'N/A',
+      eventName: registration.event?.title || registration.eventName || 'Unknown Event',
+      userName: user.name || 'Unknown User',
+      section: user.section || 'N/A',
+      dept: user.department || user.branch || 'N/A',
+      regDate: new Date(registration.registeredAt).toLocaleDateString()
+    };
+    
+    // Try JSON format first (more structured)
+    try {
+      const jsonString = JSON.stringify(qrData);
+      if (jsonString.length <= 300) {
+        return jsonString;
+      }
+    } catch (e) {
+      // Fall back to pipe format if JSON fails
+    }
+    
+    // Fallback to compact pipe-delimited format with event name and reg ID first
+    const qrString = `Reg. ID:${qrData.regId}|EVENT:${qrData.eventName.substring(0, 25)}|NAME:${qrData.userName}|SEC:${qrData.section}|DEPT:${qrData.dept}|DATE:${qrData.regDate}`;
+    
+    return qrString;
+  };
 
   // Admins see all events, organizers see their own
   const userEvents = user.role === 'admin' ? events : events.filter(e => e.organizerId === user.id);
@@ -109,14 +140,14 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-16 sm:pt-20 lg:pt-24 pb-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
             Welcome back, {user.name}!
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             {user.role === 'organizer' ? 'Manage your events and track participation.' :
              user.role === 'admin' ? 'Monitor all events and system activity.' :
              'Track your registrations and discover new events.'}
@@ -124,19 +155,19 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-center">
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                <div className={`p-2 sm:p-3 rounded-lg ${stat.bgColor}`}>
+                  <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color}`} />
                 </div>
-                <div className="ml-4">
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">{stat.label}</p>
                 </div>
               </div>
             </div>
@@ -146,12 +177,12 @@ const Dashboard: React.FC = () => {
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
+            <nav className="flex overflow-x-auto px-4 sm:px-6">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  className={`py-3 sm:py-4 px-2 sm:px-4 lg:px-6 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -211,7 +242,9 @@ const Dashboard: React.FC = () => {
                         <div key={registration.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
                           <CheckCircle className="w-5 h-5 text-green-600" />
                           <div className="flex-1">
-                            <p className="font-medium text-sm">{registration.event.title}</p>
+                            <p className="font-medium text-sm">
+                              {registration.event?.title || 'Event Title Unavailable'}
+                            </p>
                             <p className="text-xs text-gray-500">
                               Registered {format(registration.registeredAt, 'MMM dd')}
                             </p>
@@ -430,50 +463,185 @@ const Dashboard: React.FC = () => {
                 
                 {userRegistrations.length > 0 ? (
                   <div className="space-y-4">
-                    {userRegistrations.map(registration => (
-                      <div key={registration.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-900">{registration.event.title}</h4>
-                            <p className="text-gray-600 text-sm">{registration.event.description}</p>
+                    {userRegistrations.map(registration => {
+                      // Safely get event ID, handling different ID formats
+                      const eventId = registration.event?.id || registration.event?._id || registration.eventId;
+                      
+                      return (
+                        <div key={registration.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h4 className="text-lg font-semibold text-gray-900">
+                                {registration.event?.title || 'Event Title Unavailable'}
+                              </h4>
+                              <p className="text-gray-600 text-sm">
+                                {registration.event?.description || 'Description not available'}
+                              </p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <button 
+                                onClick={() => setShowQRCode(showQRCode === registration.id ? null : registration.id)}
+                                className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                                title={showQRCode === registration.id ? "Hide QR Code" : "Show QR Code"}
+                              >
+                                <QrCode className="w-4 h-4" />
+                              </button>
+                              {eventId && (
+                                <Link
+                                  to={`/events/${eventId}`}
+                                  className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                                  title="View Event Details"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Link>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex space-x-2">
-                            <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
-                              <QrCode className="w-4 h-4" />
-                            </button>
-                            <Link
-                              to={`/events/${registration.event.id}`}
-                              className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Link>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="flex items-center text-gray-600">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              <span>
+                                {registration.event?.date ? format(registration.event.date, 'MMM dd') : 'Date TBD'}
+                              </span>
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                              <Clock className="w-4 h-4 mr-2" />
+                              <span>{registration.event?.time || 'Time TBD'}</span>
+                            </div>
+                            <div className="flex items-center text-gray-600 min-w-0">
+                              <span className="whitespace-nowrap mr-2">QR:</span>
+                              <span className="text-xs font-mono truncate" title={registration.qrCode || 'N/A'}>
+                                {registration.qrCode || 'N/A'}
+                              </span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                registration.status === 'registered' ? 'bg-blue-100 text-blue-800' :
+                                registration.status === 'attended' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {registration.status}
+                              </span>
+                            </div>
                           </div>
+                          
+                          {/* QR Code Display */}
+                          {showQRCode === registration.id && (
+                            <div className="mt-4 p-4 bg-gray-50 rounded-lg border-t">
+                              <div className="flex justify-between items-start mb-3">
+                                <h5 className="font-semibold text-gray-900">Registration QR Code</h5>
+                                <button
+                                  onClick={() => setShowQRCode(null)}
+                                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                  title="Close QR Code"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                              
+                              {registration.qrCode || registration.registrationId || registration.id ? (
+                                <div className="flex flex-col sm:flex-row items-center gap-4">
+                                  <div className="flex-shrink-0">
+                                    {(() => {
+                                      try {
+                                        const qrValue = getQRValue(registration);
+                                        
+                                        return (
+                                          <QRCodeSVG 
+                                            value={qrValue}
+                                            size={140}
+                                            level="M"
+                                            includeMargin={true}
+                                            className="border rounded bg-white"
+                                          />
+                                        );
+                                      } catch (error) {
+                                        console.error('QR Code generation error:', error);
+                                        return (
+                                          <div className="w-[140px] h-[140px] border rounded bg-white flex items-center justify-center">
+                                            <div className="text-center p-2">
+                                              <QrCode className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                              <p className="text-xs text-gray-500">QR Error</p>
+                                            </div>
+                                          </div>
+                                        );
+                                      }
+                                    })()}
+                                  </div>
+                                  <div className="flex-1 text-center sm:text-left">
+                                    <p className="text-sm text-gray-600 mb-3">
+                                      Show this QR code at the event for quick check-in
+                                    </p>
+                                    <div className="bg-white p-3 rounded border">
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                          <p className="text-xs text-gray-500 mb-1">Name:</p>
+                                          <p className="font-medium text-gray-800">{user.name}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-xs text-gray-500 mb-1">Registration ID:</p>
+                                          <p className="font-mono text-gray-800">{registration.registrationId || registration.id}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-xs text-gray-500 mb-1">Section:</p>
+                                          <p className="font-medium text-gray-800">{user.section || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-xs text-gray-500 mb-1">Department:</p>
+                                          <p className="font-medium text-gray-800">{user.department || user.branch || 'N/A'}</p>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="mt-3 pt-3 border-t">
+                                        <p className="text-xs text-gray-500 mb-2">QR Code Contains:</p>
+                                        <div className="bg-gray-50 p-2 rounded text-xs leading-relaxed text-gray-700">
+                                          {(() => {
+                                            const qrValue = getQRValue(registration);
+                                            try {
+                                              // Try to parse as JSON first
+                                              const parsed = JSON.parse(qrValue);
+                                              return Object.entries(parsed).map(([key, value], index) => {
+                                                // Format display names for better readability with event name and reg ID prominent
+                                                const displayKey = key === 'regId' ? 'Reg. ID' : 
+                                                                 key === 'eventName' ? 'EVENT NAME' :
+                                                                 key === 'userName' ? 'STUDENT NAME' :
+                                                                 key === 'regDate' ? 'REG DATE' :
+                                                                 key.toUpperCase();
+                                                return (
+                                                  <div key={index} className="mb-1">
+                                                    <span className="font-medium text-blue-600">{displayKey}:</span>{' '}
+                                                    <span className="font-medium">{value as string}</span>
+                                                  </div>
+                                                );
+                                              });
+                                            } catch (e) {
+                                              // Fall back to pipe-delimited parsing
+                                              return qrValue.split('|').map((item, index) => (
+                                                <div key={index} className="mb-1">
+                                                  <span className="font-medium text-blue-600">{item.split(':')[0]}:</span>{' '}
+                                                  <span className="font-medium">{item.split(':').slice(1).join(':')}</span>
+                                                </div>
+                                              ));
+                                            }
+                                          })()}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-center py-6">
+                                  <QrCode className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                  <p className="text-gray-600 font-medium">No QR Code Available</p>
+                                  <p className="text-sm text-gray-500">QR code data is not available for this registration</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div className="flex items-center text-gray-600">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            <span>{format(registration.event.date, 'MMM dd')}</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="w-4 h-4 mr-2" />
-                            <span>{registration.event.time}</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <span>QR: {registration.qrCode}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              registration.status === 'registered' ? 'bg-blue-100 text-blue-800' :
-                              registration.status === 'attended' ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {registration.status}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-12">

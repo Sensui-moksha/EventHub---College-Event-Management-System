@@ -16,6 +16,7 @@ import QRScannerPage from './pages/QRScannerPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
+import CalendarPage from './pages/CalendarPage';
 
 // Simple error boundary
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: any }> {
@@ -96,6 +97,13 @@ function App() {
                       <EventDetails />
                     </ErrorBoundary>
                   } />
+                  <Route path="/events/:id/edit" element={
+                    <ProtectedRoute>
+                      <ErrorBoundary>
+                        <CreateEvent />
+                      </ErrorBoundary>
+                    </ProtectedRoute>
+                  } />
                   <Route path="/create-event" element={
                     <ProtectedRoute>
                       <ErrorBoundary>
@@ -103,6 +111,7 @@ function App() {
                       </ErrorBoundary>
                     </ProtectedRoute>
                   } />
+                  <Route path="/calendar" element={<CalendarPage />} />
                   <Route path="/qr-scanner" element={
                     <ProtectedRoute>
                       <ErrorBoundary>
