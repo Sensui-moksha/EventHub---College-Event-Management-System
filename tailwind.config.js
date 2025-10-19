@@ -19,6 +19,29 @@ export default {
         'safe-left': 'env(safe-area-inset-left)',
         'safe-right': 'env(safe-area-inset-right)',
       },
+      animation: {
+        'float': 'float 3s ease-in-out infinite',
+        'float-delayed': 'float 3s ease-in-out infinite 1.5s',
+        'typing': 'typing 4s steps(40) infinite',
+        'bounce-slow': 'bounce 2s infinite',
+        'pulse-slow': 'pulse 3s infinite',
+        'glow': 'glow 2s ease-in-out infinite alternate',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
+        typing: {
+          '0%': { width: '0' },
+          '50%': { width: '100%' },
+          '100%': { width: '0' },
+        },
+        glow: {
+          '0%': { boxShadow: '0 0 5px rgba(59, 130, 246, 0.5)' },
+          '100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)' },
+        },
+      },
     },
   },
   plugins: [],

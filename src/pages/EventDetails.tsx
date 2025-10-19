@@ -59,7 +59,7 @@ const EventDetails: React.FC = () => {
   }, [showShareMenu]);
   
   // Filtering, sorting, and search state
-  const [sortBy, setSortBy] = useState<'regId' | 'name' | 'department'>('department');
+  const [sortBy, setSortBy] = useState<'regId' | 'name' | 'department' | 'year'>('department');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [filterDepartment, setFilterDepartment] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -640,6 +640,11 @@ const EventDetails: React.FC = () => {
           const deptB = b.user.department || '';
           comparison = deptA.localeCompare(deptB);
           break;
+        case 'year':
+          const yearA = a.user.year || 0;
+          const yearB = b.user.year || 0;
+          comparison = yearA - yearB;
+          break;
       }
       
       return sortOrder === 'desc' ? -comparison : comparison;
@@ -659,31 +664,111 @@ const EventDetails: React.FC = () => {
       return;
     }
 
-    const exportData = filteredAndSortedParticipants.map((reg, index) => ({
-      'S.No': index + 1,
-      'Registration ID': reg.user.regId || 'N/A',
-      'Name': reg.user.name,
-      'Department': reg.user.department || 'N/A',
-      'Section': reg.user.section || 'N/A',
-      'Year': reg.user.year || 'N/A',
-      'Email': reg.user.email,
-      'Mobile': reg.user.mobile || 'N/A',
-      'Registered At': new Date(reg.registeredAt).toLocaleString(),
-      'Status': reg.status
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    // Create workbook and worksheet manually for better style control
     const wb = XLSX.utils.book_new();
+    
+    // Define headers
+    const headers = [
+      'S.No', 'Registration ID', 'Name', 'Department', 'Section', 
+      'Year', 'Email', 'Mobile', 'Registered At', 'Status'
+    ];
+    
+    // Create data rows
+    const dataRows = filteredAndSortedParticipants.map((reg, index) => [
+      index + 1,
+      reg.user.regId || 'N/A',
+      reg.user.name,
+      reg.user.department || 'N/A',
+      reg.user.section || 'N/A',
+      reg.user.year || 'N/A',
+      reg.user.email,
+      reg.user.mobile || 'N/A',
+      new Date(reg.registeredAt).toLocaleString(),
+      reg.status
+    ]);
+    
+    // Combine headers and data
+    const allData = [headers, ...dataRows];
+    
+    // Create worksheet from array
+    const ws = XLSX.utils.aoa_to_sheet(allData);
+    
+    // Initialize worksheet properties
+    if (!ws['!cols']) ws['!cols'] = [];
+    if (!ws['!rows']) ws['!rows'] = [];
+    
+    // Set column widths
+    ws['!cols'] = headers.map((header, index) => {
+      const maxLength = Math.max(
+        header.length,
+        ...dataRows.map(row => String(row[index] || '').length)
+      );
+      return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
+    });
+    
+    // Set header row height
+    ws['!rows'][0] = { hpt: 35 };
+    
+    // Apply styles to header cells (A1 to J1)
+    const headerRange = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!ws[cellAddress]) continue;
+      
+      // Set cell style
+      ws[cellAddress].s = {
+        fill: {
+          patternType: "solid",
+          fgColor: { rgb: "4472C4" } // Professional blue
+        },
+        font: {
+          name: "Calibri",
+          color: { rgb: "FFFFFF" },
+          bold: true,
+          sz: 11
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
+          wrapText: false
+        },
+        border: {
+          top: { style: "thin", color: { rgb: "000000" } },
+          bottom: { style: "thin", color: { rgb: "000000" } },
+          left: { style: "thin", color: { rgb: "000000" } },
+          right: { style: "thin", color: { rgb: "000000" } }
+        }
+      };
+    }
+    
+    // Apply borders to all data cells
+    for (let row = 1; row <= headerRange.e.r; row++) {
+      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (!ws[cellAddress]) continue;
+        
+        if (!ws[cellAddress].s) ws[cellAddress].s = {};
+        ws[cellAddress].s.border = {
+          top: { style: "thin", color: { rgb: "D3D3D3" } },
+          bottom: { style: "thin", color: { rgb: "D3D3D3" } },
+          left: { style: "thin", color: { rgb: "D3D3D3" } },
+          right: { style: "thin", color: { rgb: "D3D3D3" } }
+        };
+      }
+    }
+    
+    // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, 'Participants');
     
-    // Auto-fit column widths
-    const colWidths = Object.keys(exportData[0] || {}).map(key => ({
-      wch: Math.max(key.length, ...exportData.map(row => String(row[key as keyof typeof row]).length))
-    }));
-    ws['!cols'] = colWidths;
-
+    // Generate filename and download
     const fileName = `${(event?.title || 'event').replace(/[^a-zA-Z0-9]/g, '_')}_participants.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    
+    // Write file with specific options for better compatibility
+    XLSX.writeFile(wb, fileName, { 
+      bookType: 'xlsx',
+      cellStyles: true,
+      compression: true
+    });
     
     addToast({
       type: 'success',
@@ -1263,12 +1348,13 @@ const EventDetails: React.FC = () => {
                 <div className="flex items-center space-x-2 flex-1">
                   <select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as 'regId' | 'name' | 'department')}
+                    onChange={(e) => setSortBy(e.target.value as 'regId' | 'name' | 'department' | 'year')}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="department">Sort by Department</option>
                     <option value="regId">Sort by Reg. ID</option>
                     <option value="name">Sort by Name</option>
+                    <option value="year">Sort by Year</option>
                   </select>
                   
                   <button

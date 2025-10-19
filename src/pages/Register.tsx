@@ -134,6 +134,7 @@ const Register: React.FC = () => {
       password: formData.password,
       role: formData.role,
       department: formData.department,
+       section: formData.section, // Include section
       branch: formData.department, // Send branch as department value
       mobile: formData.mobile,
       year: formData.year,

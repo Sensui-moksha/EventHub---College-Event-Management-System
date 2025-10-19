@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { EventProvider } from './contexts/EventContext';
 import { ToastProvider } from './components/ui/Toast';
 import Navbar from './components/Navbar';
+import OverlayFooter from './components/OverlayFooter';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -53,73 +54,78 @@ function App() {
           <EventProvider>
             <ToastProvider>
               <Router>
-                <Navbar />
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={
-                    <ErrorBoundary>
-                      <Login />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/register" element={
-                    <ErrorBoundary>
-                      <Register />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/events" element={
-                    <ErrorBoundary>
-                      <Events />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/dashboard" element={
-                    <ProtectedRoute>
-                      <ErrorBoundary>
-                        <Dashboard />
-                      </ErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <ErrorBoundary>
-                        <Profile />
-                      </ErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin-users" element={
-                    <ProtectedRoute>
-                      <ErrorBoundary>
-                        <AdminUsers />
-                      </ErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/events/:id" element={
-                    <ErrorBoundary>
-                      <EventDetails />
-                    </ErrorBoundary>
-                  } />
-                  <Route path="/events/:id/edit" element={
-                    <ProtectedRoute>
-                      <ErrorBoundary>
-                        <CreateEvent />
-                      </ErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/create-event" element={
-                    <ProtectedRoute>
-                      <ErrorBoundary>
-                        <CreateEvent />
-                      </ErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/calendar" element={<CalendarPage />} />
-                  <Route path="/qr-scanner" element={
-                    <ProtectedRoute>
-                      <ErrorBoundary>
-                        <QRScannerPage />
-                      </ErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                </Routes>
+                <div className="min-h-screen flex flex-col">
+                  <Navbar />
+                  <main className="flex-1">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/login" element={
+                        <ErrorBoundary>
+                          <Login />
+                        </ErrorBoundary>
+                      } />
+                      <Route path="/register" element={
+                        <ErrorBoundary>
+                          <Register />
+                        </ErrorBoundary>
+                      } />
+                      <Route path="/events" element={
+                        <ErrorBoundary>
+                          <Events />
+                        </ErrorBoundary>
+                      } />
+                      <Route path="/dashboard" element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <Dashboard />
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <Profile />
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin-users" element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <AdminUsers />
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/events/:id" element={
+                        <ErrorBoundary>
+                          <EventDetails />
+                        </ErrorBoundary>
+                      } />
+                      <Route path="/events/:id/edit" element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <CreateEvent />
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/create-event" element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <CreateEvent />
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/calendar" element={<CalendarPage />} />
+                      <Route path="/qr-scanner" element={
+                        <ProtectedRoute>
+                          <ErrorBoundary>
+                            <QRScannerPage />
+                          </ErrorBoundary>
+                        </ProtectedRoute>
+                      } />
+                    </Routes>
+                  </main>
+                  <OverlayFooter />
+                </div>
               </Router>
             </ToastProvider>
           </EventProvider>
