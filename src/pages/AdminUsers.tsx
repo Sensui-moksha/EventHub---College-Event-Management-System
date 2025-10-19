@@ -11,7 +11,7 @@ interface User {
   year: string;
   regId: string;
   avatar?: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'user' | 'organizer';
   createdAt?: string;
 }
 
@@ -24,7 +24,7 @@ interface UserFormData {
   mobile: string;
   year: string;
   regId: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'user' | 'organizer';
 }
 
 interface EditUserData {
@@ -35,7 +35,7 @@ interface EditUserData {
   mobile: string;
   year: string;
   regId: string;
-  role: 'admin' | 'user' | 'student' | 'organizer';
+  role: 'admin' | 'user' | 'organizer';
 }
 
 const AdminUsers: React.FC = () => {
@@ -126,7 +126,7 @@ const AdminUsers: React.FC = () => {
     }
     
     try {
-      const response = await fetch('/api/register', {
+      const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(createForm)
@@ -164,7 +164,7 @@ const AdminUsers: React.FC = () => {
     if (!selectedUser) return;
     
     try {
-      const response = await fetch(`/api/admin/user/${selectedUser._id}`, {
+      const response = await fetch(`/api/users/${selectedUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editForm)
@@ -548,9 +548,10 @@ const AdminUsers: React.FC = () => {
                     required
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     value={createForm.role}
-                    onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as 'admin' | 'user' })}
+                    onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as 'admin' | 'user' | 'organizer' })}
                   >
                     <option value="user">User</option>
+                    <option value="organizer">Organizer</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>
@@ -687,9 +688,10 @@ const AdminUsers: React.FC = () => {
                     required
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     value={editForm.role}
-                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'admin' | 'user' })}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'admin' | 'user' | 'organizer' })}
                   >
                     <option value="user">User</option>
+                    <option value="organizer">Organizer</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>

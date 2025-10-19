@@ -17,6 +17,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'EventHub server is running',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
 // QR Code Secret for signing
 const QR_SECRET = process.env.QR_CODE_SECRET || 'your_secure_qr_secret_key_change_in_production';
 
@@ -949,6 +959,188 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+// Get individual user by ID
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    
+    res.json({ user });
+  } catch (err) {
+    console.error('Fetch user error:', err);
+    res.status(500).json({ error: 'Failed to fetch user.' });
+  }
+});
+
+// Delete user by ID (admin only)
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByIdAndDelete(id);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    
+    res.json({ message: 'User deleted successfully.' });
+  } catch (err) {
+    console.error('Delete user error:', err);
+    res.status(500).json({ error: 'Failed to delete user.' });
+  }
+});
+
+// Update user by ID (admin only)
+app.put('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, department, section, mobile, year, regId, avatar, role } = req.body;
+    
+    // Find and update user
+    const user = await User.findByIdAndUpdate(
+      id,
+      { name, email, department, section, mobile, year, regId, avatar, role },
+      { new: true, runValidators: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    
+    res.json({ user });
+  } catch (err) {
+    console.error('User update error:', err);
+    res.status(400).json({ error: 'Failed to update user.' });
+  }
+});
+
+// Create new user (admin only)  
+app.post('/api/users', async (req, res) => {
+  try {
+    const { name, email, password, role, department, section, mobile, year, regId } = req.body;
+    
+    // Validate required fields
+    if (!name || !email || !password || !role || !department || !mobile || !year) {
+      return res.status(400).json({ error: 'All required fields must be provided.' });
+    }
+    
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email already registered.' });
+    }
+    
+    // Check if regId is already taken (if provided)
+    if (regId) {
+      const existingRegId = await User.findOne({ regId });
+      if (existingRegId) {
+        return res.status(409).json({ error: 'Registration ID already exists.' });
+      }
+    }
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create new user
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      department,
+      section: section || '',
+      mobile,
+      year,
+      regId: regId || `USER-${Date.now()}`,
+      branch: department // Set branch same as department for compatibility
+    });
+    
+    await user.save();
+    
+    // Return user without password
+    const userObj = user.toObject();
+    delete userObj.password;
+    
+    res.status(201).json({ 
+      message: 'User created successfully.',
+      user: userObj 
+    });
+  } catch (err) {
+    console.error('User creation error:', err);
+    res.status(500).json({ error: 'Failed to create user.' });
+  }
+});
+
+// Admin: Create new user
+app.post('/api/admin/users', async (req, res) => {
+  try {
+    const { name, email, password, role, department, section, mobile, year, regId } = req.body;
+    
+    // Validate required fields
+    if (!name || !email || !password || !role || !department || !mobile || !year) {
+      return res.status(400).json({ error: 'All required fields must be provided.' });
+    }
+    
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email already registered.' });
+    }
+    
+    // Check if regId is already taken (if provided)
+    if (regId) {
+      const existingRegId = await User.findOne({ regId });
+      if (existingRegId) {
+        return res.status(409).json({ error: 'Registration ID already exists.' });
+      }
+    }
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create new user
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      department,
+      section: section || '',
+      mobile,
+      year,
+      regId: regId || `USER-${Date.now()}`,
+      branch: department // Set branch same as department for compatibility
+    });
+    
+    await user.save();
+    
+    // Return user without password
+    const userObj = user.toObject();
+    delete userObj.password;
+    
+    res.status(201).json({ 
+      message: 'User created successfully.',
+      user: userObj 
+    });
+  } catch (err) {
+    console.error('Admin user creation error:', err);
+    res.status(500).json({ error: 'Failed to create user.' });
+  }
+});
+
 // Admin: Update any user's profile
 app.put('/api/admin/user/:id', async (req, res) => {
   try {
@@ -1140,4 +1332,8 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🏫 EventHub Server running on campus network`);
+  console.log(`📍 Access from anywhere on campus: http://0.0.0.0:${PORT}`);
+  console.log(`🚀 Server ready for campus-wide deployment!`);
+});
