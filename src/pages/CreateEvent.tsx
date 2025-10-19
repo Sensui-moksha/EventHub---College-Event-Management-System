@@ -58,6 +58,9 @@ const CreateEvent: React.FC = () => {
     );
   }
 
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  // State for form data
   const [formData, setFormData] = useState({
     title: editingEvent?.title || '',
     description: editingEvent?.description || '',
@@ -72,6 +75,47 @@ const CreateEvent: React.FC = () => {
     registrationDeadline: editingEvent?.registrationDeadline ? new Date(editingEvent.registrationDeadline).toISOString().slice(0, 10) : '',
     status: editingEvent?.status || 'upcoming',
   });
+
+  // Helper function to get events for a specific date
+  const getEventsForDate = (date: Date) => {
+    return events.filter(event => {
+      const eventDate = new Date(event.date);
+      return eventDate.toDateString() === date.toDateString();
+    });
+  };
+
+  // Helper function to format date for display
+  const formatDateForDisplay = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Generate calendar days for the current month
+  const generateCalendarDays = () => {
+    const today = new Date();
+    const currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const firstDayOfWeek = currentDate.getDay();
+    
+    const days = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    // Add all days of the month
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+      days.push(new Date(today.getFullYear(), today.getMonth(), day));
+    }
+    
+    return days;
+  };
+
+  const calendarDays = generateCalendarDays();
   const [imagePreview, setImagePreview] = useState<string>('');
 
   // Load event data if editing via URL parameter
@@ -389,6 +433,126 @@ const CreateEvent: React.FC = () => {
                       onChange={handleInputChange}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Event Calendar View */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Event Calendar - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowCalendar(!showCalendar)}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    {showCalendar ? 'Hide Calendar' : 'Show Calendar'}
+                  </button>
+                </div>
+
+                {showCalendar && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    {/* Calendar Header */}
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                        <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Calendar Grid */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {calendarDays.map((day, index) => {
+                        if (!day) {
+                          return <div key={index} className="h-10"></div>;
+                        }
+                        
+                        const dayEvents = getEventsForDate(day);
+                        const isToday = day.toDateString() === new Date().toDateString();
+                        const isPast = day < new Date(new Date().setHours(0, 0, 0, 0));
+                        const hasEvents = dayEvents.length > 0;
+                        
+                        return (
+                          <div
+                            key={index}
+                            className={`h-10 flex items-center justify-center text-sm relative rounded-md
+                              ${isToday ? 'bg-blue-100 text-blue-800 font-semibold' : ''}
+                              ${isPast ? 'text-gray-400' : 'text-gray-700'}
+                              ${hasEvents ? 'bg-red-50 border border-red-200' : 'hover:bg-gray-50'}
+                            `}
+                            title={hasEvents ? `${dayEvents.length} event(s): ${dayEvents.map(e => e.title).join(', ')}` : ''}
+                          >
+                            {day.getDate()}
+                            {hasEvents && (
+                              <div className="absolute bottom-0 right-0 w-2 h-2 bg-red-500 rounded-full -mb-1 -mr-1"></div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Legend */}
+                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></div>
+                        <span>Today</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-red-50 border border-red-200 rounded relative">
+                          <div className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full -mb-0.5 -mr-0.5"></div>
+                        </div>
+                        <span>Has Events</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Current Month Event List */}
+                <div className="mt-4">
+                  <h4 className="text-md font-medium text-gray-800 mb-2">Upcoming Events This Month</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {events
+                      .filter(event => {
+                        const eventDate = new Date(event.date);
+                        const currentMonth = new Date().getMonth();
+                        const currentYear = new Date().getFullYear();
+                        return eventDate.getMonth() === currentMonth && 
+                               eventDate.getFullYear() === currentYear &&
+                               eventDate >= new Date();
+                      })
+                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                      .slice(0, 5)
+                      .map(event => (
+                        <div key={event.id || (event as any)._id} className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded">
+                          <div>
+                            <p className="font-medium text-sm text-gray-900">{event.title}</p>
+                            <p className="text-xs text-gray-500">
+                              {formatDateForDisplay(new Date(event.date))} at {event.time}
+                            </p>
+                          </div>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            event.category === 'technical' ? 'bg-blue-100 text-blue-800' :
+                            event.category === 'cultural' ? 'bg-purple-100 text-purple-800' :
+                            event.category === 'sports' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {event.category}
+                          </span>
+                        </div>
+                      ))}
+                    {events.filter(event => {
+                      const eventDate = new Date(event.date);
+                      const currentMonth = new Date().getMonth();
+                      const currentYear = new Date().getFullYear();
+                      return eventDate.getMonth() === currentMonth && 
+                             eventDate.getFullYear() === currentYear &&
+                             eventDate >= new Date();
+                    }).length === 0 && (
+                      <p className="text-sm text-gray-500 italic">No upcoming events this month</p>
+                    )}
                   </div>
                 </div>
               </div>

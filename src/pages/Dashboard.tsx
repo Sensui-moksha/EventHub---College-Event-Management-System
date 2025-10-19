@@ -238,19 +238,31 @@ const Dashboard: React.FC = () => {
                   <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg p-6 border border-green-100">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
                     <div className="space-y-3">
-                      {userRegistrations.slice(0, 3).map(registration => (
-                        <div key={registration.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">
-                              {registration.event?.title || 'Event Title Unavailable'}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Registered {format(registration.registeredAt, 'MMM dd')}
-                            </p>
+                      {userRegistrations.slice(0, 3).map(registration => {
+                        const eventId = registration.event?.id || registration.event?._id || registration.eventId;
+                        return (
+                          <div 
+                            key={registration.id} 
+                            className="flex items-center space-x-3 p-3 bg-white rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                            onClick={() => {
+                              if (eventId) {
+                                navigate(`/events/${eventId}`);
+                              }
+                            }}
+                            title="Click to view event details"
+                          >
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">
+                                {registration.event?.title || 'Event Title Unavailable'}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Registered {format(registration.registeredAt, 'MMM dd')}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       {userRegistrations.length === 0 && (
                         <p className="text-gray-500 text-sm">No recent activity</p>
                       )}
@@ -318,13 +330,19 @@ const Dashboard: React.FC = () => {
                       // Get registrations for this event
                       const eventRegistrations = registrations.filter(r => r.eventId === event.id);
                       return (
-                        <div key={event.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow relative">
+                        <div 
+                          key={event.id} 
+                          className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow relative cursor-pointer"
+                          onClick={() => navigate(`/events/${event.id}`)}
+                          title="Click to view event details"
+                        >
                           {/* Multi-select checkbox */}
                           <input
                             type="checkbox"
                             className="absolute top-4 left-4 w-5 h-5 z-10"
                             checked={selectedEvents.includes(event.id)}
-                            onChange={() => {
+                            onChange={(e) => {
+                              e.stopPropagation(); // Prevent card click when clicking checkbox
                               setSelectedEvents(prev =>
                                 prev.includes(event.id)
                                   ? prev.filter(eid => eid !== event.id)
@@ -342,7 +360,10 @@ const Dashboard: React.FC = () => {
                               <button
                                 className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                                 title="Edit Event"
-                                onClick={() => navigate('/create-event', { state: { event } })}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent card click when clicking edit
+                                  navigate('/create-event', { state: { event } });
+                                }}
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
@@ -350,7 +371,8 @@ const Dashboard: React.FC = () => {
                                 <button
                                   className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                                   title="Delete Event"
-                                  onClick={async () => {
+                                  onClick={async (e) => {
+                                    e.stopPropagation(); // Prevent card click when clicking delete
                                     if (window.confirm('Are you sure you want to delete this event?')) {
                                       await deleteEvent(event.id);
                                     }
@@ -363,7 +385,8 @@ const Dashboard: React.FC = () => {
                                 <button
                                   className="p-2 text-gray-400 hover:text-yellow-600 transition-colors"
                                   title={event.status === 'upcoming' ? 'Close Registration' : 'Open Registration'}
-                                  onClick={async () => {
+                                  onClick={async (e) => {
+                                    e.stopPropagation(); // Prevent card click when clicking status toggle
                                     const newStatus = event.status === 'upcoming' ? 'cancelled' : 'upcoming';
                                     await updateEvent(event.id, { status: newStatus });
                                   }}
@@ -468,7 +491,16 @@ const Dashboard: React.FC = () => {
                       const eventId = registration.event?.id || registration.event?._id || registration.eventId;
                       
                       return (
-                        <div key={registration.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                        <div 
+                          key={registration.id} 
+                          className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => {
+                            if (eventId) {
+                              navigate(`/events/${eventId}`);
+                            }
+                          }}
+                          title="Click to view event details"
+                        >
                           <div className="flex justify-between items-start mb-4">
                             <div>
                               <h4 className="text-lg font-semibold text-gray-900">
@@ -480,7 +512,10 @@ const Dashboard: React.FC = () => {
                             </div>
                             <div className="flex space-x-2">
                               <button 
-                                onClick={() => setShowQRCode(showQRCode === registration.id ? null : registration.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent card click when clicking QR button
+                                  setShowQRCode(showQRCode === registration.id ? null : registration.id);
+                                }}
                                 className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                                 title={showQRCode === registration.id ? "Hide QR Code" : "Show QR Code"}
                               >
@@ -491,6 +526,7 @@ const Dashboard: React.FC = () => {
                                   to={`/events/${eventId}`}
                                   className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                                   title="View Event Details"
+                                  onClick={(e) => e.stopPropagation()} // Prevent card click when clicking link
                                 >
                                   <Eye className="w-4 h-4" />
                                 </Link>
