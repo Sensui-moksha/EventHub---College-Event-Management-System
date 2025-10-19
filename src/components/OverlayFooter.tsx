@@ -9,8 +9,8 @@ const OverlayFooter: React.FC = () => {
       {/* Scrolling text overlay */}
       <div className="relative overflow-hidden py-2">
         <div className="animate-scroll-left whitespace-nowrap text-sm font-elegant text-white drop-shadow-lg">
-          <span className="inline-block px-8 bg-black/25 rounded-full py-1 mx-2 shadow-md">
-            Developed by Mokshyagna Yadav
+          <span className="inline-block px-8 py-1 mx-2 rounded-full bg-black/40 shadow-md">
+            ©️ 2025 Event Management System. Developed by Mokshyagna Yadav, Department of Computer Science and Engineering. This project is a part of academic work. All Rights Reserved.
           </span>
         </div>
       </div>
