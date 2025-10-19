@@ -680,15 +680,11 @@ We welcome contributions to improve the College Event Management System! Here's 
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**All Rights Reserved**
 
-### MIT License Summary
-- ✅ Commercial use
-- ✅ Modification
-- ✅ Distribution
-- ✅ Private use
-- ❌ Liability
-- ❌ Warranty
+This project and its contents are proprietary. No part of this software may be reproduced, distributed, or transmitted in any form or by any means without the prior written permission of the copyright holder.
+
+© 2025 EventHub - College Event Management System. All rights reserved.
 
 ---
 
