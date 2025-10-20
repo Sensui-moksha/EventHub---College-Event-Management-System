@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
+=======
+import { motion } from 'framer-motion';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEvents } from '../contexts/EventContext';
@@ -15,6 +19,10 @@ import {
   Plus,
   X
 } from 'lucide-react';
+<<<<<<< HEAD
+=======
+import { pageVariants } from '../utils/animations';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
 const CreateEvent: React.FC = () => {
   const { user } = useAuth();
@@ -28,6 +36,7 @@ const CreateEvent: React.FC = () => {
   const isEditMode = !!id || !!location.state?.event;
   const editingEvent = location.state?.event || (id ? events.find(e => e.id === id || (e as any)._id === id) : null);
 
+<<<<<<< HEAD
   // If we're in edit mode via URL but haven't found the event yet, show loading
   if (id && !editingEvent && events.length === 0 && !loading) {
     return (
@@ -58,6 +67,8 @@ const CreateEvent: React.FC = () => {
     );
   }
 
+=======
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   const [showCalendar, setShowCalendar] = useState(false);
 
   // State for form data
@@ -76,6 +87,11 @@ const CreateEvent: React.FC = () => {
     status: editingEvent?.status || 'upcoming',
   });
 
+<<<<<<< HEAD
+=======
+  const [imagePreview, setImagePreview] = useState<string>('');
+
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   // Helper function to get events for a specific date
   const getEventsForDate = (date: Date) => {
     return events.filter(event => {
@@ -116,7 +132,10 @@ const CreateEvent: React.FC = () => {
   };
 
   const calendarDays = generateCalendarDays();
+<<<<<<< HEAD
   const [imagePreview, setImagePreview] = useState<string>('');
+=======
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
   // Load event data if editing via URL parameter
   useEffect(() => {
@@ -144,6 +163,39 @@ const CreateEvent: React.FC = () => {
     }
   }, [id, editingEvent, events]);
 
+<<<<<<< HEAD
+=======
+  // If we're in edit mode via URL but haven't found the event yet, show loading
+  if (id && !editingEvent && events.length === 0 && !loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading event details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If we're in edit mode but the event doesn't exist
+  if (id && !editingEvent && events.length > 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h2>
+          <p className="text-gray-600 mb-4">The event you're trying to edit doesn't exist or may have been deleted.</p>
+          <button
+            onClick={() => navigate('/events')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Back to Events
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   const categories = [
     { value: 'technical', label: 'Technical' },
     { value: 'cultural', label: 'Cultural' },
@@ -337,7 +389,17 @@ const CreateEvent: React.FC = () => {
   }
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen pt-24 pb-8">
+=======
+    <motion.div 
+      className="min-h-screen pt-24 pb-8"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -759,7 +821,11 @@ const CreateEvent: React.FC = () => {
           </div>
         </form>
       </div>
+<<<<<<< HEAD
     </div>
+=======
+    </motion.div>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   );
 };
 

@@ -1,8 +1,16 @@
 import React, { useState, useMemo } from 'react';
+<<<<<<< HEAD
+=======
+import { motion } from 'framer-motion';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 import { useEvents } from '../contexts/EventContext';
 import EventCard from '../components/EventCard';
 import MultiEventRegistration from '../components/MultiEventRegistration';
 import { Search, Filter, Calendar, Users, Trophy, Grid, List } from 'lucide-react';
+<<<<<<< HEAD
+=======
+import { pageVariants, staggerContainerVariants, listItemVariants } from '../utils/animations';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
 const Events: React.FC = () => {
   const { events } = useEvents();
@@ -46,20 +54,53 @@ const Events: React.FC = () => {
 
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen pt-16 sm:pt-20 lg:pt-24 pb-8">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
+=======
+    <motion.div 
+      className="min-h-screen pt-16 sm:pt-20 lg:pt-24 pb-8"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-8 sm:mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="flex justify-center mb-4">
+            {/* Logo removed for GitHub push */}
+          </div>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
             College Events
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
             Discover amazing events happening at our college. From technical competitions to cultural festivals.
           </p>
+<<<<<<< HEAD
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+=======
+        </motion.div>
+
+        {/* Stats Cards */}
+        <motion.div 
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8"
+          variants={staggerContainerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 hover:shadow-lg transition-shadow">
             <div className="flex items-center">
               <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
@@ -95,7 +136,11 @@ const Events: React.FC = () => {
               </div>
             </div>
           </div>
+<<<<<<< HEAD
         </div>
+=======
+        </motion.div>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
         {/* Filters */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-6 sm:mb-8">
@@ -178,6 +223,7 @@ const Events: React.FC = () => {
           <>
             {/* Events Grid */}
             {filteredEvents.length > 0 ? (
+<<<<<<< HEAD
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                 {filteredEvents.map(event => (
                   <EventCard key={event.id} event={event} />
@@ -189,6 +235,37 @@ const Events: React.FC = () => {
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-600 mb-2">No events found</h3>
                 <p className="text-sm sm:text-base text-gray-500">Try adjusting your search criteria.</p>
               </div>
+=======
+              <motion.div 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
+                variants={staggerContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {filteredEvents.map((event, index) => (
+                  <motion.div
+                    key={event.id}
+                    variants={listItemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <EventCard event={event} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div 
+                className="text-center py-12 sm:py-16"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-600 mb-2">No events found</h3>
+                <p className="text-sm sm:text-base text-gray-500">Try adjusting your search criteria.</p>
+              </motion.div>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
             )}
           </>
         ) : (
@@ -205,7 +282,11 @@ const Events: React.FC = () => {
           />
         )}
       </div>
+<<<<<<< HEAD
     </div>
+=======
+    </motion.div>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   );
 };
 

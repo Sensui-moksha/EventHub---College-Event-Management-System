@@ -1,6 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+<<<<<<< HEAD
+=======
+import { motion } from 'framer-motion';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 import { useAuth } from '../contexts/AuthContext';
 import { useEvents } from '../contexts/EventContext';
 import { useToast } from '../components/ui/Toast';
@@ -30,6 +34,10 @@ import {
   Search,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+<<<<<<< HEAD
+=======
+import { pageVariants } from '../utils/animations';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
 const EventDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -515,6 +523,10 @@ const EventDetails: React.FC = () => {
       });
     }
   };
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   // ...existing code...
 
   // Robust event lookup for both id and _id
@@ -607,6 +619,10 @@ const EventDetails: React.FC = () => {
           user.regId || '',
           user.department || '',
           user.section || '',
+<<<<<<< HEAD
+=======
+          (user as any).roomNo || '',
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
           user.year?.toString() || '',
           user.mobile || '',
           // Also search in registration date
@@ -669,7 +685,11 @@ const EventDetails: React.FC = () => {
     
     // Define headers
     const headers = [
+<<<<<<< HEAD
       'S.No', 'Registration ID', 'Name', 'Department', 'Section', 
+=======
+      'S.No', 'Registration ID', 'Name', 'Department', 'Section/Room', 
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       'Year', 'Email', 'Mobile', 'Registered At', 'Status'
     ];
     
@@ -679,7 +699,11 @@ const EventDetails: React.FC = () => {
       reg.user.regId || 'N/A',
       reg.user.name,
       reg.user.department || 'N/A',
+<<<<<<< HEAD
       reg.user.section || 'N/A',
+=======
+      (reg.user.role === 'faculty' ? (reg.user as any).roomNo : reg.user.section) || 'N/A',
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       reg.user.year || 'N/A',
       reg.user.email,
       reg.user.mobile || 'N/A',
@@ -909,6 +933,7 @@ const EventDetails: React.FC = () => {
   };
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen pt-16 sm:pt-20 lg:pt-24 pb-8">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
         {/* Back Button */}
@@ -919,6 +944,26 @@ const EventDetails: React.FC = () => {
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Back to Events</span>
         </button>
+=======
+    <motion.div 
+      className="min-h-screen pt-16 sm:pt-20 lg:pt-24 pb-8"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
+        {/* Back Button */}
+        <motion.button
+          onClick={() => navigate('/events')}
+          className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 mb-4 sm:mb-6 transition-colors text-sm sm:text-base"
+          whileHover={{ x: -5 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>Back to Events</span>
+        </motion.button>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
           {/* Event Image */}
@@ -1400,7 +1445,11 @@ const EventDetails: React.FC = () => {
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Name</th>
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Email</th>
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Department</th>
+<<<<<<< HEAD
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Section</th>
+=======
+                    <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Section/Room</th>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Year</th>
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Registered At</th>
                     {(user?.role === 'admin' || user?.role === 'organizer') && (
@@ -1415,7 +1464,11 @@ const EventDetails: React.FC = () => {
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.name ?? '-'}</td>
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.email ?? '-'}</td>
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.department ?? '-'}</td>
+<<<<<<< HEAD
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.section ?? '-'}</td>
+=======
+                      <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.role === 'faculty' ? (reg.user as any)?.roomNo ?? '-' : reg.user?.section ?? '-'}</td>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.year ?? '-'}</td>
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.registeredAt ? format(new Date(reg.registeredAt), 'MMM dd, yyyy') : '-'}</td>
                       {(user?.role === 'admin' || user?.role === 'organizer') && (
@@ -1442,7 +1495,11 @@ const EventDetails: React.FC = () => {
           )}
         </div>
       </div>
+<<<<<<< HEAD
     </div>
+=======
+    </motion.div>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   );
 };
 

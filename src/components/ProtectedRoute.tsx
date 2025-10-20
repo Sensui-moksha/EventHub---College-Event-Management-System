@@ -4,7 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+<<<<<<< HEAD
   requiredRole?: 'student' | 'organizer' | 'admin';
+=======
+  requiredRole?: 'student' | 'organizer' | 'admin' | 'faculty';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {

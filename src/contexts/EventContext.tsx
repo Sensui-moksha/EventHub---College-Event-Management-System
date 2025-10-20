@@ -111,11 +111,19 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
 
     loadInitialData();
 
+<<<<<<< HEAD
     // Set up auto-refresh every 30 seconds
     const refreshInterval = setInterval(() => {
       fetchEvents();
       fetchRegistrations();
     }, 30000);
+=======
+    // Set up auto-refresh every 5 seconds
+    const refreshInterval = setInterval(() => {
+      fetchEvents();
+      fetchRegistrations();
+    }, 5000);
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
     // Set up visibility change listener to refresh when tab becomes active
     const handleVisibilityChange = () => {
@@ -422,6 +430,10 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
       if (data.event) {
         const updatedEvent = { ...data.event, id: data.event._id };
         setEvents(prev => prev.map(e => e.id === eventId ? updatedEvent : e));
+<<<<<<< HEAD
+=======
+        await refreshData(); // Instant refresh after update
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
         return true;
       }
       return false;
@@ -477,6 +489,10 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
       if (data.results) {
         setResults(prev => [...prev, ...data.results]);
         setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'completed' as const } : e));
+<<<<<<< HEAD
+=======
+        await refreshData(); // Instant refresh after results
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
         return true;
       }
       return false;

@@ -190,9 +190,16 @@ const userSchema = new mongoose.Schema({
   department: { type: String, required: true },
   branch: { type: String, required: true },
   mobile: { type: String, required: true },
+<<<<<<< HEAD
   year: { type: Number, required: true },
   regId: { type: String }, // Add regId field for students
   section: { type: String }, // Add section field
+=======
+  year: { type: Number, required: function () { return this.role === 'student'; } }, // Only required for students
+  regId: { type: String }, // Add regId field for students
+  section: { type: String }, // Student section
+  roomNo: { type: String }, // Faculty room number
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   avatar: { type: String }, // Add avatar field for profile pictures
   createdAt: { type: Date, default: Date.now }
 });
@@ -839,9 +846,26 @@ app.post('/api/events/:eventId/remove-participant', async (req, res) => {
 app.post('/api/register', async (req, res) => {
   console.log('Register API received:', req.body);
   try {
+<<<<<<< HEAD
     const { name, email, password, role, department, branch, mobile, year, regId, section } = req.body;
     if (!name || !email || !password || !role || !department || !branch || !mobile || !year) {
       return res.status(400).json({ error: 'All fields are required.' });
+=======
+    const { name, email, password, role, department, branch, mobile, year, regId, section, roomNo } = req.body;
+    // Basic validation
+    if (!name || !email || !password || !role || !department || !branch || !mobile) {
+      return res.status(400).json({ error: 'Basic fields are required.' });
+    }
+    // Role-specific validation
+    if (role === 'student' && !year) {
+      return res.status(400).json({ error: 'Year is required for students.' });
+    }
+    if (role === 'student' && !section) {
+      return res.status(400).json({ error: 'Section is required for students.' });
+    }
+    if (role === 'faculty' && !roomNo) {
+      return res.status(400).json({ error: 'Room number is required for faculty.' });
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
     }
     // Check if user already exists
     const existing = await User.findOne({ email });
@@ -850,7 +874,11 @@ app.post('/api/register', async (req, res) => {
     }
     // Hash password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
+<<<<<<< HEAD
     const user = new User({ name, email, password: hashedPassword, role, department, branch, mobile, year, regId, section });
+=======
+  const user = new User({ name, email, password: hashedPassword, role, department, branch, mobile, year: role === 'faculty' ? undefined : year, regId, section, roomNo });
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
     await user.save();
     // Don't send password back
     const userObj = user.toObject();
@@ -883,12 +911,20 @@ app.post('/api/login', async (req, res) => {
 app.put('/api/user/:id', async (req, res) => {
   try {
     const { id } = req.params;
+<<<<<<< HEAD
     const { name, email, department, section, mobile, year, regId, avatar } = req.body;
+=======
+  const { name, email, department, section, mobile, year, regId, avatar, roomNo } = req.body;
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
     
     // Find and update user
     const user = await User.findByIdAndUpdate(
       id,
+<<<<<<< HEAD
       { name, email, department, section, mobile, year, regId, avatar },
+=======
+  { name, email, department, section, mobile, year, regId, avatar, roomNo },
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       { new: true, runValidators: true }
     );
     
@@ -997,12 +1033,20 @@ app.delete('/api/users/:id', async (req, res) => {
 app.put('/api/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
+<<<<<<< HEAD
     const { name, email, department, section, mobile, year, regId, avatar, role } = req.body;
+=======
+  const { name, email, department, section, mobile, year, regId, avatar, role, roomNo } = req.body;
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
     
     // Find and update user
     const user = await User.findByIdAndUpdate(
       id,
+<<<<<<< HEAD
       { name, email, department, section, mobile, year, regId, avatar, role },
+=======
+  { name, email, department, section, mobile, year, regId, avatar, role, roomNo },
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       { new: true, runValidators: true }
     ).select('-password');
     
@@ -1020,11 +1064,30 @@ app.put('/api/users/:id', async (req, res) => {
 // Create new user (admin only)  
 app.post('/api/users', async (req, res) => {
   try {
+<<<<<<< HEAD
     const { name, email, password, role, department, section, mobile, year, regId } = req.body;
     
     // Validate required fields
     if (!name || !email || !password || !role || !department || !mobile || !year) {
       return res.status(400).json({ error: 'All required fields must be provided.' });
+=======
+  const { name, email, password, role, department, section, mobile, year, regId, roomNo } = req.body;
+    
+    // Basic validation
+    if (!name || !email || !password || !role || !department || !mobile) {
+      return res.status(400).json({ error: 'Basic fields are required.' });
+    }
+    
+    // Role-specific validation
+    if (role === 'student' && !year) {
+      return res.status(400).json({ error: 'Year is required for students.' });
+    }
+    if (role === 'student' && !section) {
+      return res.status(400).json({ error: 'Section is required for students.' });
+    }
+    if (role === 'faculty' && !roomNo) {
+      return res.status(400).json({ error: 'Room number is required for faculty.' });
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
     }
     
     // Validate password length
@@ -1056,9 +1119,16 @@ app.post('/api/users', async (req, res) => {
       password: hashedPassword,
       role,
       department,
+<<<<<<< HEAD
       section: section || '',
       mobile,
       year,
+=======
+  section: section || '',
+  roomNo: roomNo || '',
+      mobile,
+  year: role === 'faculty' ? undefined : year,
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       regId: regId || `USER-${Date.now()}`,
       branch: department // Set branch same as department for compatibility
     });
@@ -1082,11 +1152,30 @@ app.post('/api/users', async (req, res) => {
 // Admin: Create new user
 app.post('/api/admin/users', async (req, res) => {
   try {
+<<<<<<< HEAD
     const { name, email, password, role, department, section, mobile, year, regId } = req.body;
     
     // Validate required fields
     if (!name || !email || !password || !role || !department || !mobile || !year) {
       return res.status(400).json({ error: 'All required fields must be provided.' });
+=======
+  const { name, email, password, role, department, section, mobile, year, regId, roomNo } = req.body;
+    
+    // Basic validation
+    if (!name || !email || !password || !role || !department || !mobile) {
+      return res.status(400).json({ error: 'Basic fields are required.' });
+    }
+    
+    // Role-specific validation
+    if (role === 'student' && !year) {
+      return res.status(400).json({ error: 'Year is required for students.' });
+    }
+    if (role === 'student' && !section) {
+      return res.status(400).json({ error: 'Section is required for students.' });
+    }
+    if (role === 'faculty' && !roomNo) {
+      return res.status(400).json({ error: 'Room number is required for faculty.' });
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
     }
     
     // Validate password length
@@ -1118,9 +1207,16 @@ app.post('/api/admin/users', async (req, res) => {
       password: hashedPassword,
       role,
       department,
+<<<<<<< HEAD
       section: section || '',
       mobile,
       year,
+=======
+  section: section || '',
+  roomNo: roomNo || '',
+      mobile,
+  year: role === 'faculty' ? undefined : year,
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       regId: regId || `USER-${Date.now()}`,
       branch: department // Set branch same as department for compatibility
     });

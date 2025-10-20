@@ -4,8 +4,14 @@ export interface User {
   regId?: string;
   name: string;
   email: string;
+<<<<<<< HEAD
   role: 'student' | 'organizer' | 'admin';
   section?: string;
+=======
+  role: 'student' | 'organizer' | 'admin' | 'faculty';
+  section?: string;
+  roomNo?: string;
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   department?: string;
   branch?: string; // Added branch for backend compatibility
   mobile?: string;

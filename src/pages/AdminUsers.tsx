@@ -7,11 +7,19 @@ interface User {
   email: string;
   department: string;
   section: string;
+<<<<<<< HEAD
+=======
+  roomNo?: string;
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   mobile: string;
   year: string;
   regId: string;
   avatar?: string;
+<<<<<<< HEAD
   role: 'admin' | 'user' | 'organizer';
+=======
+  role: 'admin' | 'user' | 'organizer' | 'faculty';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   createdAt?: string;
 }
 
@@ -21,10 +29,18 @@ interface UserFormData {
   password: string;
   department: string;
   section: string;
+<<<<<<< HEAD
   mobile: string;
   year: string;
   regId: string;
   role: 'admin' | 'user' | 'organizer';
+=======
+  roomNo?: string;
+  mobile: string;
+  year: string;
+  regId: string;
+  role: 'admin' | 'user' | 'organizer' | 'faculty';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 }
 
 interface EditUserData {
@@ -32,10 +48,18 @@ interface EditUserData {
   email: string;
   department: string;
   section: string;
+<<<<<<< HEAD
   mobile: string;
   year: string;
   regId: string;
   role: 'admin' | 'user' | 'organizer';
+=======
+  roomNo?: string;
+  mobile: string;
+  year: string;
+  regId: string;
+  role: 'admin' | 'user' | 'organizer' | 'faculty';
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 }
 
 const AdminUsers: React.FC = () => {
@@ -55,6 +79,10 @@ const AdminUsers: React.FC = () => {
     password: '',
     department: '',
     section: '',
+<<<<<<< HEAD
+=======
+    roomNo: '',
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
     mobile: '',
     year: '',
     regId: '',
@@ -66,6 +94,10 @@ const AdminUsers: React.FC = () => {
     email: '',
     department: '',
     section: '',
+<<<<<<< HEAD
+=======
+    roomNo: '',
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
     mobile: '',
     year: '',
     regId: '',
@@ -82,6 +114,7 @@ const AdminUsers: React.FC = () => {
     alert(message); // Simple alert for now - can be enhanced later
   };
 
+<<<<<<< HEAD
   // Check if user is admin
   if (!user || user.role !== 'admin') {
     return (
@@ -94,6 +127,8 @@ const AdminUsers: React.FC = () => {
     );
   }
 
+=======
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   // Fetch all users
   const fetchUsers = async () => {
     try {
@@ -105,7 +140,11 @@ const AdminUsers: React.FC = () => {
       } else {
         showToast(data.error || 'Failed to fetch users', 'error');
       }
+<<<<<<< HEAD
     } catch (error) {
+=======
+    } catch (_error) {
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       showToast('Failed to fetch users', 'error');
     } finally {
       setLoading(false);
@@ -116,6 +155,21 @@ const AdminUsers: React.FC = () => {
     fetchUsers();
   }, []);
 
+<<<<<<< HEAD
+=======
+  // Check if user is admin (after hooks)
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600">You don't have permission to access this page.</p>
+        </div>
+      </div>
+    );
+  }
+
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   // Create new user
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,7 +183,15 @@ const AdminUsers: React.FC = () => {
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+<<<<<<< HEAD
         body: JSON.stringify(createForm)
+=======
+        body: JSON.stringify({
+          ...createForm,
+          year: createForm.role === 'faculty' ? undefined as unknown as string : createForm.year,
+          roomNo: (createForm as any).roomNo,
+        })
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       });
       
       const data = await response.json();
@@ -167,7 +229,15 @@ const AdminUsers: React.FC = () => {
       const response = await fetch(`/api/users/${selectedUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+<<<<<<< HEAD
         body: JSON.stringify(editForm)
+=======
+        body: JSON.stringify({
+          ...editForm,
+          year: editForm.role === 'faculty' ? undefined as unknown as string : editForm.year,
+          roomNo: (editForm as any).roomNo,
+        })
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       });
       
       const data = await response.json();
@@ -255,6 +325,10 @@ const AdminUsers: React.FC = () => {
       email: user.email,
       department: user.department,
       section: user.section,
+<<<<<<< HEAD
+=======
+      roomNo: (user as any).roomNo || '',
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       mobile: user.mobile,
       year: user.year,
       regId: user.regId,
@@ -371,7 +445,19 @@ const AdminUsers: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{userData.department}</div>
                       <div className="text-sm text-gray-500">
+<<<<<<< HEAD
                         {userData.section} - {userData.year}
+=======
+                        {userData.role === 'faculty' ? (
+                          <>
+                            Room: {(userData as any).roomNo || '-'}
+                          </>
+                        ) : (
+                          <>
+                            {userData.section} - {userData.year}
+                          </>
+                        )}
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -380,6 +466,11 @@ const AdminUsers: React.FC = () => {
                           ? 'bg-purple-100 text-purple-800'
                           : userData.role === 'organizer'
                           ? 'bg-blue-100 text-blue-800'
+<<<<<<< HEAD
+=======
+                          : userData.role === 'faculty'
+                          ? 'bg-yellow-100 text-yellow-800'
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                           : 'bg-green-100 text-green-800'
                       }`}>
                         {userData.role}
@@ -500,6 +591,7 @@ const AdminUsers: React.FC = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+<<<<<<< HEAD
                       Section *
                     </label>
                     <input
@@ -508,11 +600,22 @@ const AdminUsers: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       value={createForm.section}
                       onChange={(e) => setCreateForm({ ...createForm, section: e.target.value })}
+=======
+                      {createForm.role === 'faculty' ? 'Room No *' : 'Section'}
+                    </label>
+                    <input
+                      type="text"
+                      required={createForm.role === 'faculty'}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      value={(createForm as any).roomNo && createForm.role === 'faculty' ? (createForm as any).roomNo : createForm.section}
+                      onChange={(e) => setCreateForm({ ...createForm, ...(createForm.role === 'faculty' ? { roomNo: e.target.value } : { section: e.target.value }) })}
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                     />
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
+<<<<<<< HEAD
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Year *
@@ -525,14 +628,36 @@ const AdminUsers: React.FC = () => {
                       onChange={(e) => setCreateForm({ ...createForm, year: e.target.value })}
                     />
                   </div>
+=======
+                  {createForm.role !== 'faculty' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Year *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        value={createForm.year}
+                        onChange={(e) => setCreateForm({ ...createForm, year: e.target.value })}
+                      />
+                    </div>
+                  )}
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Mobile *
                     </label>
+<<<<<<< HEAD
                     <input
                       type="tel"
                       required
+=======
+                      <input
+                        type="text"
+                        required={editForm.role === 'faculty'}
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       value={createForm.mobile}
                       onChange={(e) => setCreateForm({ ...createForm, mobile: e.target.value })}
@@ -548,10 +673,18 @@ const AdminUsers: React.FC = () => {
                     required
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     value={createForm.role}
+<<<<<<< HEAD
                     onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as 'admin' | 'user' | 'organizer' })}
                   >
                     <option value="user">User</option>
                     <option value="organizer">Organizer</option>
+=======
+                    onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as 'admin' | 'user' | 'organizer' | 'faculty' })}
+                  >
+                    <option value="user">User</option>
+                    <option value="organizer">Organizer</option>
+                    <option value="faculty">Faculty</option>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                     <option value="admin">Admin</option>
                   </select>
                 </div>
@@ -640,6 +773,7 @@ const AdminUsers: React.FC = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+<<<<<<< HEAD
                       Section *
                     </label>
                     <input
@@ -648,11 +782,22 @@ const AdminUsers: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       value={editForm.section}
                       onChange={(e) => setEditForm({ ...editForm, section: e.target.value })}
+=======
+                      {editForm.role === 'faculty' ? 'Room No *' : 'Section'}
+                    </label>
+                    <input
+                      type="text"
+                      required={editForm.role === 'faculty'}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      value={(editForm.role === 'faculty' ? (editForm as any).roomNo : editForm.section) || ''}
+                      onChange={(e) => setEditForm({ ...editForm, ...(editForm.role === 'faculty' ? { roomNo: e.target.value } : { section: e.target.value }) })}
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                     />
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
+<<<<<<< HEAD
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Year *
@@ -665,6 +810,22 @@ const AdminUsers: React.FC = () => {
                       onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
                     />
                   </div>
+=======
+                  {editForm.role !== 'faculty' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Year *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        value={editForm.year}
+                        onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
+                      />
+                    </div>
+                  )}
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -688,10 +849,18 @@ const AdminUsers: React.FC = () => {
                     required
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     value={editForm.role}
+<<<<<<< HEAD
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'admin' | 'user' | 'organizer' })}
                   >
                     <option value="user">User</option>
                     <option value="organizer">Organizer</option>
+=======
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'admin' | 'user' | 'organizer' | 'faculty' })}
+                  >
+                    <option value="user">User</option>
+                    <option value="organizer">Organizer</option>
+                    <option value="faculty">Faculty</option>
+>>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                     <option value="admin">Admin</option>
                   </select>
                 </div>
