@@ -1,9 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-<<<<<<< HEAD
-=======
-import { motion } from 'framer-motion';
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 import { useAuth } from '../contexts/AuthContext';
 import { useEvents } from '../contexts/EventContext';
 import EventCard from '../components/EventCard';
@@ -16,10 +12,6 @@ import {
   Star,
   TrendingUp
 } from 'lucide-react';
-<<<<<<< HEAD
-=======
-import { pageVariants } from '../utils/animations';
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
 const Home: React.FC = () => {
   const { user } = useAuth();
@@ -62,34 +54,12 @@ const Home: React.FC = () => {
   ];
 
   return (
-<<<<<<< HEAD
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 text-white py-12 sm:py-16 lg:py-20 xl:py-24">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
           <div className="text-center">
-=======
-    <motion.div 
-      className="min-h-screen"
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-    >
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 text-white py-12 sm:py-16 lg:py-20 xl:py-24">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <motion.div 
-          className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <div className="text-center">
-            {/* Logo removed for GitHub push */}
-            
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
               Welcome to{' '}
               <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
@@ -118,26 +88,12 @@ const Home: React.FC = () => {
               )}
             </div>
           </div>
-<<<<<<< HEAD
         </div>
-=======
-        </motion.div>
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       </section>
 
       {/* Stats Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-white">
-<<<<<<< HEAD
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
-=======
-        <motion.div 
-          className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {stats.map((stat) => (
               <div
@@ -156,26 +112,12 @@ const Home: React.FC = () => {
               </div>
             ))}
           </div>
-<<<<<<< HEAD
         </div>
-=======
-        </motion.div>
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       </section>
 
       {/* Featured Events */}
       <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-blue-50">
-<<<<<<< HEAD
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
-=======
-        <motion.div 
-          className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               Upcoming Events
@@ -208,26 +150,12 @@ const Home: React.FC = () => {
               <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
             </Link>
           </div>
-<<<<<<< HEAD
         </div>
-=======
-        </motion.div>
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       </section>
 
       {/* Features Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-white">
-<<<<<<< HEAD
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
-=======
-        <motion.div 
-          className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               Why Choose EventHub?
@@ -274,27 +202,13 @@ const Home: React.FC = () => {
               </p>
             </div>
           </div>
-<<<<<<< HEAD
         </div>
-=======
-        </motion.div>
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       </section>
 
       {/* CTA Section */}
       {!user && (
         <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-<<<<<<< HEAD
           <div className="max-w-4xl mx-auto text-center px-3 sm:px-4 md:px-6 lg:px-8">
-=======
-          <motion.div 
-            className="max-w-4xl mx-auto text-center px-3 sm:px-4 md:px-6 lg:px-8"
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">
               Ready to Get Started?
             </h2>
@@ -308,17 +222,10 @@ const Home: React.FC = () => {
               Create Your Account
               <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
             </Link>
-<<<<<<< HEAD
           </div>
         </section>
       )}
     </div>
-=======
-          </motion.div>
-        </section>
-      )}
-    </motion.div>
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   );
 };
 

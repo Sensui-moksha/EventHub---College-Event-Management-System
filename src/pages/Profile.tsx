@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-=======
-import { motion } from 'framer-motion';
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ui/Toast';
 import {
@@ -19,10 +15,6 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-<<<<<<< HEAD
-=======
-import { pageVariants, fadeInVariants } from '../utils/animations';
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
 const Profile: React.FC = () => {
   const { user, updateProfile, changePassword } = useAuth();
@@ -41,10 +33,6 @@ const Profile: React.FC = () => {
     email: user?.email || '',
     department: user?.department || '',
     section: user?.section || '',
-<<<<<<< HEAD
-=======
-    roomNo: (user as any)?.roomNo || '',
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
     mobile: user?.mobile || '',
     year: user?.year || 1,
     regId: user?.regId || '',
@@ -65,10 +53,6 @@ const Profile: React.FC = () => {
         email: user.email || '',
         department: user.department || '',
         section: user.section || '',
-<<<<<<< HEAD
-=======
-        roomNo: (user as any)?.roomNo || '',
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
         mobile: user.mobile || '',
         year: user.year || 1,
         regId: user.regId || '',
@@ -89,16 +73,9 @@ const Profile: React.FC = () => {
         name: formData.name,
         email: formData.email,
         department: formData.department,
-<<<<<<< HEAD
         section: formData.section,
         mobile: formData.mobile,
         year: formData.year,
-=======
-        section: user.role === 'faculty' ? undefined : formData.section,
-        roomNo: user.role === 'faculty' ? formData.roomNo : undefined,
-        mobile: formData.mobile,
-        year: user.role === 'faculty' ? undefined : formData.year,
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
         regId: formData.regId,
         avatar: formData.avatar,
       });
@@ -259,24 +236,8 @@ const Profile: React.FC = () => {
   ];
 
   return (
-<<<<<<< HEAD
     <div className="min-h-screen pt-24 pb-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-=======
-    <motion.div 
-      className="min-h-screen pt-24 pb-8"
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-    >
-      <motion.div 
-        className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
-        variants={fadeInVariants}
-        initial="initial"
-        animate="animate"
-      >
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-12">
@@ -419,7 +380,6 @@ const Profile: React.FC = () => {
                     </div>
                   )}
 
-<<<<<<< HEAD
                   {/* Section */}
                   <div>
                     <label htmlFor="section" className="block text-sm font-medium text-gray-700 mb-2">Section</label>
@@ -431,35 +391,6 @@ const Profile: React.FC = () => {
                       onChange={handleInputChange}
                       className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
-=======
-                  {/* Section (Students) / Room No (Faculty) */}
-                  <div>
-                    {user.role === 'faculty' ? (
-                      <>
-                        <label htmlFor="roomNo" className="block text-sm font-medium text-gray-700 mb-2">Room No</label>
-                        <input
-                          id="roomNo"
-                          name="roomNo"
-                          type="text"
-                          value={formData.roomNo}
-                          onChange={handleInputChange}
-                          className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <label htmlFor="section" className="block text-sm font-medium text-gray-700 mb-2">Section</label>
-                        <input
-                          id="section"
-                          name="section"
-                          type="text"
-                          value={formData.section}
-                          onChange={handleInputChange}
-                          className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        />
-                      </>
-                    )}
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                   </div>
 
                   {/* Mobile Number */}
@@ -521,13 +452,8 @@ const Profile: React.FC = () => {
                       <p className="text-lg text-gray-900">{user.email}</p>
                     </div>
                     <div>
-<<<<<<< HEAD
                       <label className="block text-sm font-medium text-gray-500 mb-1">Section</label>
                       <p className="text-lg text-gray-900">{user.section || 'Not specified'}</p>
-=======
-                      <label className="block text-sm font-medium text-gray-500 mb-1">{user.role === 'faculty' ? 'Room No' : 'Section'}</label>
-                      <p className="text-lg text-gray-900">{user.role === 'faculty' ? ((user as any).roomNo || 'Not specified') : (user.section || 'Not specified')}</p>
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-1">Mobile Number</label>
@@ -539,19 +465,10 @@ const Profile: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-500 mb-1">Department</label>
                       <p className="text-lg text-gray-900">{user.department || 'Not specified'}</p>
                     </div>
-<<<<<<< HEAD
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-1">Year of Study</label>
                       <p className="text-lg text-gray-900">{user.year ? `${user.year}${user.year === 1 ? 'st' : user.year === 2 ? 'nd' : user.year === 3 ? 'rd' : 'th'} Year` : 'Not specified'}</p>
                     </div>
-=======
-                    {user.role !== 'faculty' && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-1">Year of Study</label>
-                        <p className="text-lg text-gray-900">{user.year ? `${user.year}${user.year === 1 ? 'st' : user.year === 2 ? 'nd' : user.year === 3 ? 'rd' : 'th'} Year` : 'Not specified'}</p>
-                      </div>
-                    )}
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-1">Registration ID</label>
                       <p className="text-lg text-gray-900">{user.regId || 'Not specified'}</p>
@@ -706,13 +623,8 @@ const Profile: React.FC = () => {
             )}
           </div>
         </div>
-<<<<<<< HEAD
       </div>
     </div>
-=======
-      </motion.div>
-    </motion.div>
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   );
 };
 

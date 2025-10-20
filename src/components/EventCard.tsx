@@ -1,10 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-<<<<<<< HEAD
-=======
-import { motion } from 'framer-motion';
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 import { 
   Calendar, 
   Clock, 
@@ -14,10 +10,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Event } from '../types';
-<<<<<<< HEAD
-=======
-import { cardHoverVariants } from '../utils/animations';
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
 interface EventCardProps {
   event: Event;
@@ -60,17 +52,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   const isFull = event.currentParticipants >= event.maxParticipants;
 
   return (
-<<<<<<< HEAD
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 group">
-=======
-    <motion.div
-      variants={cardHoverVariants}
-      initial="rest"
-      whileHover="hover"
-      whileTap="tap"
-      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 group"
-    >
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
       {/* Event Image */}
       {event.image && (
         <div className="relative h-40 sm:h-48 lg:h-52 overflow-hidden">
@@ -167,11 +149,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </div>
         </div>
       </div>
-<<<<<<< HEAD
     </div>
-=======
-    </motion.div>
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   );
 };
 

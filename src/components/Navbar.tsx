@@ -14,10 +14,7 @@ import {
   Plus,
   Menu,
   X,
-<<<<<<< HEAD
   GraduationCap,
-=======
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
   QrCode,
   MoreHorizontal
 } from 'lucide-react';
@@ -115,7 +112,6 @@ const Navbar: React.FC = () => {
     <nav className={navbarClass}>
       <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16 lg:h-18 gap-2">
-<<<<<<< HEAD
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group flex-shrink-0 min-w-0">
             <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg group-hover:scale-105 transition-transform duration-200">
@@ -125,12 +121,6 @@ const Navbar: React.FC = () => {
               EventHub
             </span>
           </Link>
-=======
-          {/* Logo removed for GitHub push */}
-          <span className="text-base sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent truncate">
-            EventHub
-          </span>
->>>>>>> 7c79b6e (Remove clg logo and images for GitHub push)
 
           {/* Desktop Navigation */}
           <div ref={navRef} className="hidden lg:flex items-center space-x-1 xl:space-x-3 flex-1 justify-center max-w-4xl">
