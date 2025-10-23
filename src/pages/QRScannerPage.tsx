@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useEvents } from '../contexts/EventContext';
+import { useEvents } from '../contexts/EventContext.tsx';
 import QRScanner from '../components/QRScanner';
 import { QrCode, Users, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
 

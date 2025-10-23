@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useEvents } from '../contexts/EventContext';
+import { useEvents } from '../contexts/EventContext.tsx';
 
 // Custom hook for triggering immediate data refresh
 export const useImmediateRefresh = () => {

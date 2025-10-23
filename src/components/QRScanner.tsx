@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { useEvents } from '../contexts/EventContext';
+import { useEvents } from '../contexts/EventContext.tsx';
 import { useToast } from './ui/Toast';
 import { QRValidationResult } from '../types';
 import { 

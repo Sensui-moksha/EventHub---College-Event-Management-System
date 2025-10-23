@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { useEvents } from '../contexts/EventContext';
+import { useEvents } from '../contexts/EventContext.tsx';
 import { useToast } from '../components/ui/Toast';
 import * as XLSX from 'xlsx';
 import {
@@ -30,6 +31,8 @@ import {
   Search,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { pageVariants } from '../utils/animations';
+import { displayCategoryLabel, getCategoryColor } from '../utils/categories';
 
 const EventDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -515,6 +518,7 @@ const EventDetails: React.FC = () => {
       });
     }
   };
+
   // ...existing code...
 
   // Robust event lookup for both id and _id
@@ -607,6 +611,7 @@ const EventDetails: React.FC = () => {
           user.regId || '',
           user.department || '',
           user.section || '',
+          (user as any).roomNo || '',
           user.year?.toString() || '',
           user.mobile || '',
           // Also search in registration date
@@ -669,7 +674,7 @@ const EventDetails: React.FC = () => {
     
     // Define headers
     const headers = [
-      'S.No', 'Registration ID', 'Name', 'Department', 'Section', 
+      'S.No', 'Registration ID', 'Name', 'Department', 'Section/Room', 
       'Year', 'Email', 'Mobile', 'Registered At', 'Status'
     ];
     
@@ -679,7 +684,7 @@ const EventDetails: React.FC = () => {
       reg.user.regId || 'N/A',
       reg.user.name,
       reg.user.department || 'N/A',
-      reg.user.section || 'N/A',
+      (reg.user.role === 'faculty' ? (reg.user as any).roomNo : reg.user.section) || 'N/A',
       reg.user.year || 'N/A',
       reg.user.email,
       reg.user.mobile || 'N/A',
@@ -891,34 +896,29 @@ const EventDetails: React.FC = () => {
     navigate(`/events/${id}/edit`);
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'technical':
-        return 'bg-blue-100 text-blue-800';
-      case 'cultural':
-        return 'bg-purple-100 text-purple-800';
-      case 'sports':
-        return 'bg-green-100 text-green-800';
-      case 'workshop':
-        return 'bg-orange-100 text-orange-800';
-      case 'seminar':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Use shared category utils to keep display consistent across the app
+  // Note: event may include a customCategory field when category is a custom string
+  // We import helpers at top of file
 
   return (
-    <div className="min-h-screen pt-16 sm:pt-20 lg:pt-24 pb-8">
+    <motion.div 
+      className="min-h-screen pt-16 sm:pt-20 lg:pt-24 pb-8"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
         {/* Back Button */}
-        <button
+        <motion.button
           onClick={() => navigate('/events')}
           className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 mb-4 sm:mb-6 transition-colors text-sm sm:text-base"
+          whileHover={{ x: -5 }}
+          whileTap={{ scale: 0.95 }}
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Back to Events</span>
-        </button>
+        </motion.button>
 
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
           {/* Event Image */}
@@ -933,7 +933,7 @@ const EventDetails: React.FC = () => {
               <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                   <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getCategoryColor(event.category)}`}>
-                    {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
+                    {displayCategoryLabel(event.category)}
                   </span>
                   <span className="px-2 sm:px-3 py-1 bg-white/20 backdrop-blur-sm text-white rounded-full text-xs sm:text-sm font-medium">
                     {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
@@ -1400,7 +1400,7 @@ const EventDetails: React.FC = () => {
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Name</th>
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Email</th>
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Department</th>
-                    <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Section</th>
+                    <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Section/Room</th>
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Year</th>
                     <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Registered At</th>
                     {(user?.role === 'admin' || user?.role === 'organizer') && (
@@ -1415,7 +1415,7 @@ const EventDetails: React.FC = () => {
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.name ?? '-'}</td>
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.email ?? '-'}</td>
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.department ?? '-'}</td>
-                      <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.section ?? '-'}</td>
+                      <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.role === 'faculty' ? (reg.user as any)?.roomNo ?? '-' : reg.user?.section ?? '-'}</td>
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.user?.year ?? '-'}</td>
                       <td className="px-4 py-2 text-sm text-gray-800">{reg.registeredAt ? format(new Date(reg.registeredAt), 'MMM dd, yyyy') : '-'}</td>
                       {(user?.role === 'admin' || user?.role === 'organizer') && (
@@ -1442,7 +1442,7 @@ const EventDetails: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

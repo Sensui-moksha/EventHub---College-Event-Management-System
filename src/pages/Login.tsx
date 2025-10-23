@@ -1,20 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ui/Toast';
 import { Eye, EyeOff } from 'lucide-react';
+import { pageVariants, fadeInVariants, slideInBottomVariants } from '../utils/animations';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Demo accounts for quick login
-  const demoAccounts = [
-    { label: 'Admin', email: 'admin@college.edu', password: 'admin123' },
-    { label: 'Organizer', email: 'organizer@college.edu', password: 'organizer123' },
-    { label: 'Student', email: 'student1@college.edu', password: 'student123' },
-  ];
   const { login, loading } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
@@ -39,7 +35,7 @@ const Login: React.FC = () => {
         title: 'Welcome back!',
         message: 'You have successfully logged in.',
       });
-      navigate('/dashboard');
+      navigate('/'); // Redirect to Home page
     } else {
       addToast({
         type: 'error',
@@ -49,45 +45,55 @@ const Login: React.FC = () => {
     }
   };
 
-  // Helper to autofill and login
-  const autofillAndLogin = async (email: string, password: string) => {
-    setEmail(email);
-    setPassword(password);
-    // Wait for state to update before submitting
-    setTimeout(() => {
-      document.getElementById('login-submit-btn')?.click();
-    }, 100);
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <motion.div 
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+      <motion.div 
+        className="max-w-md w-full space-y-8"
+        variants={fadeInVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.2 }}
+      >
         {/* Header */}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign in to EventHub</h2>
-          <p className="text-gray-600">Use your credentials or demo accounts below.</p>
-        </div>
-
-        {/* Demo Accounts */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <div className="mb-2 font-semibold text-blue-700">Demo Accounts</div>
-          <div className="flex gap-2 flex-wrap">
-            {demoAccounts.map(acc => (
-              <button
-                key={acc.label}
-                type="button"
-                className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
-                onClick={() => autofillAndLogin(acc.email, acc.password)}
-              >
-                {acc.label}
-              </button>
-            ))}
+        <motion.div 
+          className="text-center"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          {/* College Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-4 shadow-lg border border-gray-200">
+              <img 
+                src="/logo-small.png" 
+                alt="College Logo" 
+                className="h-16 w-auto object-contain mx-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
           </div>
-          <div className="mt-2 text-xs text-gray-600">Click to autofill credentials and login for quick testing.</div>
-        </div>
+          
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign in to EventHub</h2>
+          <p className="text-gray-600">Enter your credentials to access your account.</p>
+        </motion.div>
 
         {/* Login Form */}
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <motion.form 
+          className="space-y-6" 
+          onSubmit={handleSubmit}
+          variants={slideInBottomVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.4 }}
+        >
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
             <div className="relative">
@@ -133,19 +139,24 @@ const Login: React.FC = () => {
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
-        </form>
+        </motion.form>
 
         {/* Footer */}
-        <div className="text-center mt-4">
+        <motion.div 
+          className="text-center mt-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
           <p className="text-gray-600">
             Don't have an account?{' '}
             <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
               Register here
             </Link>
           </p>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
 

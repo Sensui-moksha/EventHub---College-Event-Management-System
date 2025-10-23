@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { useEvents } from '../contexts/EventContext';
+import { useEvents } from '../contexts/EventContext.tsx';
 import { useNotifications } from '../contexts/NotificationContext';
 import { format } from 'date-fns';
 import {
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import { pageVariants, staggerContainerVariants, modalVariants } from '../utils/animations';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -41,7 +43,7 @@ const Dashboard: React.FC = () => {
       regId: registration.registrationId || registration.id || 'N/A',
       eventName: registration.event?.title || registration.eventName || 'Unknown Event',
       userName: user.name || 'Unknown User',
-      section: user.section || 'N/A',
+      section: user.role === 'faculty' ? (user as any).roomNo || 'N/A' : user.section || 'N/A',
       dept: user.department || user.branch || 'N/A',
       regDate: new Date(registration.registeredAt).toLocaleDateString()
     };
@@ -57,7 +59,7 @@ const Dashboard: React.FC = () => {
     }
     
     // Fallback to compact pipe-delimited format with event name and reg ID first
-    const qrString = `Reg. ID:${qrData.regId}|EVENT:${qrData.eventName.substring(0, 25)}|NAME:${qrData.userName}|SEC:${qrData.section}|DEPT:${qrData.dept}|DATE:${qrData.regDate}`;
+  const qrString = `Reg. ID:${qrData.regId}|EVENT:${qrData.eventName.substring(0, 25)}|NAME:${qrData.userName}|${user.role === 'faculty' ? 'ROOM' : 'SEC'}:${qrData.section}|DEPT:${qrData.dept}|DATE:${qrData.regDate}`;
     
     return qrString;
   };
@@ -140,26 +142,73 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-16 sm:pt-20 lg:pt-24 pb-8">
+    <motion.div 
+      className="min-h-screen pt-16 sm:pt-20 lg:pt-24 pb-8"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            Welcome back, {user.name}!
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            {user.role === 'organizer' ? 'Manage your events and track participation.' :
-             user.role === 'admin' ? 'Monitor all events and system activity.' :
-             'Track your registrations and discover new events.'}
-          </p>
+          {/* Mobile Logo - Centered */}
+          <div className="flex justify-center sm:hidden mb-4">
+            <div className="bg-white rounded-xl p-3 shadow-md border border-gray-200">
+              <img 
+                src="/logo-small.png" 
+                alt="College Logo" 
+                className="h-12 w-auto object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                Welcome back, {user.name}!
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600">
+                {user.role === 'organizer' ? 'Manage your events and track participation.' :
+                 user.role === 'admin' ? 'Monitor all events and system activity.' :
+                 'Track your registrations and discover new events.'}
+              </p>
+            </div>
+            
+            {/* Desktop Logo - Right Side */}
+            <div className="hidden sm:flex items-center justify-center ml-6">
+              <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <img 
+                  src="/logo-small.png" 
+                  alt="College Logo" 
+                  className="h-16 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+        <motion.div 
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8"
+          variants={staggerContainerVariants}
+          initial="initial"
+          animate="animate"
+        >
           {stats.map((stat, index) => (
-            <div
+            <motion.div
               key={index}
               className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 hover:shadow-lg transition-shadow"
+              variants={{
+                initial: { opacity: 0, y: 20 },
+                animate: { opacity: 1, y: 0 }
+              }}
             >
               <div className="flex items-center">
                 <div className={`p-2 sm:p-3 rounded-lg ${stat.bgColor}`}>
@@ -170,9 +219,9 @@ const Dashboard: React.FC = () => {
                   <p className="text-xs sm:text-sm text-gray-600">{stat.label}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -336,21 +385,26 @@ const Dashboard: React.FC = () => {
                           onClick={() => navigate(`/events/${event.id}`)}
                           title="Click to view event details"
                         >
-                          {/* Multi-select checkbox */}
-                          <input
-                            type="checkbox"
-                            className="absolute top-4 left-4 w-5 h-5 z-10"
-                            checked={selectedEvents.includes(event.id)}
-                            onChange={(e) => {
-                              e.stopPropagation(); // Prevent card click when clicking checkbox
-                              setSelectedEvents(prev =>
-                                prev.includes(event.id)
-                                  ? prev.filter(eid => eid !== event.id)
-                                  : [...prev, event.id]
-                              );
-                            }}
-                            title="Select event"
-                          />
+                          {/* Multi-select checkbox with larger safe area */}
+                          <div
+                            className="absolute top-2 left-2 z-20 flex items-center justify-center"
+                            style={{ width: 36, height: 36 }}
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <input
+                              type="checkbox"
+                              className="w-5 h-5 cursor-pointer"
+                              checked={selectedEvents.includes(event.id)}
+                              onChange={() => {
+                                setSelectedEvents(prev =>
+                                  prev.includes(event.id)
+                                    ? prev.filter(eid => eid !== event.id)
+                                    : [...prev, event.id]
+                                );
+                              }}
+                              title="Select event"
+                            />
+                          </div>
                           <div className="flex justify-between items-start mb-4">
                             <div>
                               <h4 className="text-lg font-semibold text-gray-900">{event.title}</h4>
@@ -435,7 +489,7 @@ const Dashboard: React.FC = () => {
                                   <thead>
                                     <tr className="bg-gray-100">
                                       <th className="px-4 py-2 text-left">Name</th>
-                                      <th className="px-4 py-2 text-left">Branch</th>
+                                      <th className="px-4 py-2 text-left">{`Section/Room`}</th>
                                       <th className="px-4 py-2 text-left">Department</th>
                                       <th className="px-4 py-2 text-left">Mobile</th>
                                       <th className="px-4 py-2 text-left">Email</th>
@@ -445,7 +499,7 @@ const Dashboard: React.FC = () => {
                                     {eventRegistrations.map(reg => (
                                       <tr key={reg.id} className="border-t">
                                         <td className="px-4 py-2">{reg.user.name}</td>
-                                        <td className="px-4 py-2">{reg.user.section || '-'}</td>
+                                        <td className="px-4 py-2">{reg.user.role === 'faculty' ? ((reg.user as any).roomNo || '-') : (reg.user.section || '-')}</td>
                                         <td className="px-4 py-2">{reg.user.department || '-'}</td>
                                         <td className="px-4 py-2">{reg.user.mobile || '-'}</td>
                                         <td className="px-4 py-2">{reg.user.email}</td>
@@ -563,8 +617,15 @@ const Dashboard: React.FC = () => {
                           </div>
                           
                           {/* QR Code Display */}
-                          {showQRCode === registration.id && (
-                            <div className="mt-4 p-4 bg-gray-50 rounded-lg border-t">
+                          <AnimatePresence>
+                            {showQRCode === registration.id && (
+                              <motion.div 
+                                className="mt-4 p-4 bg-gray-50 rounded-lg border-t"
+                                variants={modalVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                              >
                               <div className="flex justify-between items-start mb-3">
                                 <h5 className="font-semibold text-gray-900">Registration QR Code</h5>
                                 <button
@@ -620,8 +681,8 @@ const Dashboard: React.FC = () => {
                                           <p className="font-mono text-gray-800">{registration.registrationId || registration.id}</p>
                                         </div>
                                         <div>
-                                          <p className="text-xs text-gray-500 mb-1">Section:</p>
-                                          <p className="font-medium text-gray-800">{user.section || 'N/A'}</p>
+                                          <p className="text-xs text-gray-500 mb-1">{user.role === 'faculty' ? 'Room No:' : 'Section:'}</p>
+                                          <p className="font-medium text-gray-800">{user.role === 'faculty' ? ((user as any).roomNo || 'N/A') : (user.section || 'N/A')}</p>
                                         </div>
                                         <div>
                                           <p className="text-xs text-gray-500 mb-1">Department:</p>
@@ -673,8 +734,9 @@ const Dashboard: React.FC = () => {
                                   <p className="text-sm text-gray-500">QR code data is not available for this registration</p>
                                 </div>
                               )}
-                            </div>
+                            </motion.div>
                           )}
+                          </AnimatePresence>
                         </div>
                       );
                     })}
@@ -779,7 +841,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+  </motion.div>
   );
 };
 

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  User as UserIcon,
+  Mail as MailIcon,
+  Lock as LockIcon,
+  Phone,
+  Briefcase,
+  X
+} from 'lucide-react';
 
 interface User {
   _id: string;
@@ -7,11 +15,12 @@ interface User {
   email: string;
   department: string;
   section: string;
+  roomNo?: string;
   mobile: string;
   year: string;
   regId: string;
   avatar?: string;
-  role: 'admin' | 'user' | 'organizer';
+  role: 'admin' | 'user' | 'organizer' | 'faculty' | 'student';
   createdAt?: string;
 }
 
@@ -21,10 +30,11 @@ interface UserFormData {
   password: string;
   department: string;
   section: string;
+  roomNo?: string;
   mobile: string;
   year: string;
   regId: string;
-  role: 'admin' | 'user' | 'organizer';
+  role: 'admin' | 'user' | 'organizer' | 'faculty' | 'student';
 }
 
 interface EditUserData {
@@ -32,10 +42,11 @@ interface EditUserData {
   email: string;
   department: string;
   section: string;
+  roomNo?: string;
   mobile: string;
   year: string;
   regId: string;
-  role: 'admin' | 'user' | 'organizer';
+  role: 'admin' | 'user' | 'organizer' | 'faculty' | 'student';
 }
 
 const AdminUsers: React.FC = () => {
@@ -55,10 +66,11 @@ const AdminUsers: React.FC = () => {
     password: '',
     department: '',
     section: '',
+    roomNo: '',
     mobile: '',
     year: '',
     regId: '',
-    role: 'user'
+    role: 'student'
   });
   
   const [editForm, setEditForm] = useState<EditUserData>({
@@ -66,10 +78,11 @@ const AdminUsers: React.FC = () => {
     email: '',
     department: '',
     section: '',
+    roomNo: '',
     mobile: '',
     year: '',
     regId: '',
-    role: 'user'
+    role: 'student'
   });
   
   const [passwordForm, setPasswordForm] = useState({
@@ -82,18 +95,6 @@ const AdminUsers: React.FC = () => {
     alert(message); // Simple alert for now - can be enhanced later
   };
 
-  // Check if user is admin
-  if (!user || user.role !== 'admin') {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600">You don't have permission to access this page.</p>
-        </div>
-      </div>
-    );
-  }
-
   // Fetch all users
   const fetchUsers = async () => {
     try {
@@ -105,7 +106,7 @@ const AdminUsers: React.FC = () => {
       } else {
         showToast(data.error || 'Failed to fetch users', 'error');
       }
-    } catch (error) {
+    } catch (_error) {
       showToast('Failed to fetch users', 'error');
     } finally {
       setLoading(false);
@@ -114,7 +115,20 @@ const AdminUsers: React.FC = () => {
 
   useEffect(() => {
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Check if user is admin (after hooks)
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600">You don't have permission to access this page.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Create new user
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -124,12 +138,26 @@ const AdminUsers: React.FC = () => {
       showToast('Password must be at least 6 characters long', 'error');
       return;
     }
+    // Validation similar to Register page
+    if (!createForm.name.trim()) { showToast('Full Name Required', 'error'); return; }
+    if (!createForm.email.trim()) { showToast('Email Required', 'error'); return; }
+    if (!createForm.department.trim()) { showToast('Department Required', 'error'); return; }
+    if (createForm.role === 'student' && (!createForm.year || isNaN(Number(createForm.year)) || Number(createForm.year) < 1 || Number(createForm.year) > 4)) { showToast('Please select a valid year (1-4)', 'error'); return; }
+    if (createForm.role === 'student' && !createForm.section.trim()) { showToast('Section Required', 'error'); return; }
+    if (createForm.role === 'faculty' && !(createForm as any).roomNo?.trim()) { showToast('Room No Required', 'error'); return; }
+    if (!createForm.mobile.trim() || !/^\d{10}$/.test(createForm.mobile)) { showToast('Please enter a valid 10-digit mobile number', 'error'); return; }
+    if ((createForm.role === 'student' || createForm.role === 'faculty') && !createForm.regId.trim()) { showToast('Registration ID Required', 'error'); return; }
     
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(createForm)
+        body: JSON.stringify({
+            ...createForm,
+            // don't send year for faculty or admin roles
+            year: createForm.role === 'faculty' || createForm.role === 'admin' ? undefined as unknown as string : createForm.year,
+            roomNo: (createForm as any).roomNo,
+          })
       });
       
       const data = await response.json();
@@ -162,12 +190,26 @@ const AdminUsers: React.FC = () => {
     e.preventDefault();
     
     if (!selectedUser) return;
+    // Validation similar to Register page for edits
+    if (!editForm.name.trim()) { showToast('Full Name Required', 'error'); return; }
+    if (!editForm.email.trim()) { showToast('Email Required', 'error'); return; }
+    if (!editForm.department.trim()) { showToast('Department Required', 'error'); return; }
+    if (editForm.role === 'student' && (!editForm.year || isNaN(Number(editForm.year)) || Number(editForm.year) < 1 || Number(editForm.year) > 4)) { showToast('Please select a valid year (1-4)', 'error'); return; }
+    if (editForm.role === 'student' && !editForm.section.trim()) { showToast('Section Required', 'error'); return; }
+    if (editForm.role === 'faculty' && !(editForm as any).roomNo?.trim()) { showToast('Room No Required', 'error'); return; }
+    if (!editForm.mobile.trim() || !/^\d{10}$/.test(editForm.mobile)) { showToast('Please enter a valid 10-digit mobile number', 'error'); return; }
+    if ((editForm.role === 'student' || editForm.role === 'faculty') && !editForm.regId.trim()) { showToast('Registration ID Required', 'error'); return; }
     
     try {
       const response = await fetch(`/api/users/${selectedUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify({
+            ...editForm,
+            // don't send year for faculty or admin roles
+            year: editForm.role === 'faculty' || editForm.role === 'admin' ? undefined as unknown as string : editForm.year,
+            roomNo: (editForm as any).roomNo,
+          })
       });
       
       const data = await response.json();
@@ -255,6 +297,7 @@ const AdminUsers: React.FC = () => {
       email: user.email,
       department: user.department,
       section: user.section,
+      roomNo: (user as any).roomNo || '',
       mobile: user.mobile,
       year: user.year,
       regId: user.regId,
@@ -271,12 +314,30 @@ const AdminUsers: React.FC = () => {
   };
 
   // Filter users based on search query
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.regId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.department.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Custom regId filter: prefer numbers, then alphabets, then fallback
+  let filteredUsers: User[] = [];
+  if (searchQuery.trim() !== '') {
+    // 1. regId: numbers only
+    filteredUsers = users.filter(user =>
+      user.regId && user.regId.match(/\d+/) && user.regId.includes(searchQuery)
+    );
+    // 2. regId: alphabets only (if no number matches)
+    if (filteredUsers.length === 0) {
+      filteredUsers = users.filter(user =>
+        user.regId && user.regId.match(/[a-zA-Z]+/) && user.regId.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    // 3. fallback to other fields if still no match
+    if (filteredUsers.length === 0) {
+      filteredUsers = users.filter(user =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.department.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+  } else {
+    filteredUsers = users;
+  }
 
   if (loading) {
     return (
@@ -371,7 +432,15 @@ const AdminUsers: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{userData.department}</div>
                       <div className="text-sm text-gray-500">
-                        {userData.section} - {userData.year}
+                        {userData.role === 'faculty' ? (
+                          <>
+                            Room: {(userData as any).roomNo || '-'}
+                          </>
+                        ) : (
+                          <>
+                            {userData.section} - {userData.year}
+                          </>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -380,6 +449,8 @@ const AdminUsers: React.FC = () => {
                           ? 'bg-purple-100 text-purple-800'
                           : userData.role === 'organizer'
                           ? 'bg-blue-100 text-blue-800'
+                          : userData.role === 'faculty'
+                          ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-green-100 text-green-800'
                       }`}>
                         {userData.role}
@@ -426,150 +497,163 @@ const AdminUsers: React.FC = () => {
 
         {/* Create User Modal */}
         {showCreateForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Create New User</h2>
-              
-              <form onSubmit={handleCreateUser} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    value={createForm.name}
-                    onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                  />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+            <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create New User</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Add a new user to EventHub with role specific details</p>
+                  </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    value={createForm.email}
-                    onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-                  />
+                <button onClick={() => setShowCreateForm(false)} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Name *</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><UserIcon className="w-4 h-4" /></div>
+                    <input
+                      className="pl-10 pr-3 py-2 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      value={createForm.name}
+                      onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Password *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    value={createForm.password}
-                    onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-                  />
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email *</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><MailIcon className="w-4 h-4" /></div>
+                    <input
+                      type="email"
+                      className="pl-10 pr-3 py-2 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      value={createForm.email}
+                      onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                      required
+                    />
+                  </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Registration ID *
-                  </label>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password *</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><LockIcon className="w-4 h-4" /></div>
+                    <input
+                      type="password"
+                      minLength={6}
+                      className="pl-10 pr-3 py-2 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      value={createForm.password}
+                      onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">Password must be at least 6 characters.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Registration ID *</label>
                   <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="pr-3 py-2 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     value={createForm.regId}
                     onChange={(e) => setCreateForm({ ...createForm, regId: e.target.value })}
+                    required
                   />
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Department *
-                    </label>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Department *</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><Briefcase className="w-4 h-4" /></div>
                     <input
-                      type="text"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="pl-10 pr-3 py-2 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       value={createForm.department}
                       onChange={(e) => setCreateForm({ ...createForm, department: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Section *
-                    </label>
-                    <input
-                      type="text"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      value={createForm.section}
-                      onChange={(e) => setCreateForm({ ...createForm, section: e.target.value })}
                     />
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Year *
-                    </label>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Mobile *</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><Phone className="w-4 h-4" /></div>
                     <input
-                      type="text"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      value={createForm.year}
-                      onChange={(e) => setCreateForm({ ...createForm, year: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Mobile *
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="pl-10 pr-3 py-2 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       value={createForm.mobile}
                       onChange={(e) => setCreateForm({ ...createForm, mobile: e.target.value })}
+                      required
                     />
                   </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Role *
-                  </label>
+
+                {/* Role specific */}
+                {createForm.role === 'student' && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Section *</label>
+                      <input
+                        className="pr-3 py-2 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        value={createForm.section}
+                        onChange={(e) => setCreateForm({ ...createForm, section: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Year *</label>
+                      <select
+                        className="pr-3 py-2 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        value={createForm.year}
+                        onChange={(e) => setCreateForm({ ...createForm, year: e.target.value })}
+                        required
+                      >
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {createForm.role === 'faculty' && (
+                  <div className="col-span-2 space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Room No *</label>
+                    <input
+                      className="pr-3 py-2 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      value={(createForm as any).roomNo || ''}
+                      onChange={(e) => setCreateForm({ ...createForm, roomNo: e.target.value })}
+                      required
+                    />
+                  </div>
+                )}
+
+                <div className="col-span-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Role *</label>
                   <select
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="mt-1 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white py-2 px-3"
                     value={createForm.role}
-                    onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as 'admin' | 'user' | 'organizer' })}
+                    onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as 'admin' | 'user' | 'organizer' | 'faculty' | 'student' })}
+                    required
                   >
-                    <option value="user">User</option>
+                    <option value="student">Student</option>
                     <option value="organizer">Organizer</option>
+                    <option value="faculty">Faculty</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>
-                
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Create User
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateForm(false)}
-                    className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    Cancel
-                  </button>
+
+                <div className="col-span-2 flex justify-end space-x-3 mt-2">
+                  <button type="button" onClick={() => setShowCreateForm(false)} className="px-5 py-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200">Cancel</button>
+                  <button type="submit" className="px-6 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Create User</button>
                 </div>
               </form>
             </div>
@@ -578,7 +662,7 @@ const AdminUsers: React.FC = () => {
 
         {/* Edit User Modal */}
         {showEditForm && selectedUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Edit User: {selectedUser.name}
@@ -640,31 +724,35 @@ const AdminUsers: React.FC = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Section *
+                      {editForm.role === 'faculty' ? 'Room No *' : 'Section'}
                     </label>
                     <input
                       type="text"
-                      required
+                      required={editForm.role === 'faculty'}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      value={editForm.section}
-                      onChange={(e) => setEditForm({ ...editForm, section: e.target.value })}
+                      value={(editForm.role === 'faculty' ? (editForm as any).roomNo : editForm.section) || ''}
+                      onChange={(e) => setEditForm({ ...editForm, ...(editForm.role === 'faculty' ? { roomNo: e.target.value } : { section: e.target.value }) })}
                     />
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Year *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      value={editForm.year}
-                      onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
-                    />
-                  </div>
+                  {editForm.role === 'student' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year *</label>
+                      <select
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        value={editForm.year}
+                        onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
+                      >
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                      </select>
+                    </div>
+                  )}
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -688,10 +776,11 @@ const AdminUsers: React.FC = () => {
                     required
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     value={editForm.role}
-                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'admin' | 'user' | 'organizer' })}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'admin' | 'user' | 'organizer' | 'faculty' | 'student' })}
                   >
-                    <option value="user">User</option>
+                    <option value="student">Student</option>
                     <option value="organizer">Organizer</option>
+                    <option value="faculty">Faculty</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>
@@ -721,7 +810,7 @@ const AdminUsers: React.FC = () => {
 
         {/* Change Password Modal */}
         {showPasswordForm && selectedUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Change Password for: {selectedUser.name}

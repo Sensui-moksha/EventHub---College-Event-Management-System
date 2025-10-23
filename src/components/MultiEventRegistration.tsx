@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useEvents } from '../contexts/EventContext';
+import { useEvents } from '../contexts/EventContext.tsx';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from './ui/Toast';
 import { Event, MultiEventRegistration } from '../types';

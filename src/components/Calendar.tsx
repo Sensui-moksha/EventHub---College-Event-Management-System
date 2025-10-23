@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { useEvents } from '../contexts/EventContext';
+import { useEvents } from '../contexts/EventContext.tsx';
 import { Event } from '../types';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -321,8 +321,8 @@ export default function CalendarComponent() {
   // focus-trap-react will manage focus trapping when modal is present
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-4 md:py-8 transition-all duration-300">
+  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
         <div>
           <h2 className="text-2xl font-semibold">Calendar</h2>
           <p className="text-sm text-gray-500">Browse events by date</p>
@@ -389,7 +389,7 @@ export default function CalendarComponent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center">
+  <div className="grid grid-cols-7 gap-1 text-center min-h-[350px] md:min-h-[420px] lg:min-h-[500px]">
         {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
           <div key={d} className="text-xs text-gray-500 py-1">{d}</div>
         ))}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { useEvents } from '../contexts/EventContext';
+import { useEvents } from '../contexts/EventContext.tsx';
 import EventCard from './EventCard';
 
 interface DashboardBulkDeleteProps {

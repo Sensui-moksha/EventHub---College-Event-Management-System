@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import { 
   Calendar, 
   Clock, 
@@ -10,28 +11,15 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Event } from '../types';
+import { cardHoverVariants } from '../utils/animations';
+import { displayCategoryLabel, getCategoryColor as getCategoryColorUtil } from '../utils/categories';
 
 interface EventCardProps {
   event: Event;
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  const getCategoryColor = (category: Event['category']) => {
-    switch (category) {
-      case 'technical':
-        return 'bg-blue-100 text-blue-800';
-      case 'cultural':
-        return 'bg-purple-100 text-purple-800';
-      case 'sports':
-        return 'bg-green-100 text-green-800';
-      case 'workshop':
-        return 'bg-orange-100 text-orange-800';
-      case 'seminar':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const getCategoryColor = (category?: string) => getCategoryColorUtil(category);
 
   const getStatusColor = (status: Event['status']) => {
     switch (status) {
@@ -52,7 +40,13 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   const isFull = event.currentParticipants >= event.maxParticipants;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 group">
+    <motion.div
+      variants={cardHoverVariants}
+      initial="rest"
+      whileHover="hover"
+      whileTap="tap"
+      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 group"
+    >
       {/* Event Image */}
       {event.image && (
         <div className="relative h-40 sm:h-48 lg:h-52 overflow-hidden">
@@ -63,7 +57,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           />
           <div className="absolute top-3 sm:top-4 left-3 sm:left-4 flex flex-wrap gap-2">
             <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
-              {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
+                {displayCategoryLabel(event.category)}
             </span>
             <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
               {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
@@ -149,7 +143,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

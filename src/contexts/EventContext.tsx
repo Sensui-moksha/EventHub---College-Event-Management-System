@@ -14,6 +14,7 @@ interface EventContextType {
   createEvent: (eventData: Omit<Event, 'id' | 'createdAt' | 'currentParticipants' | 'organizer'>) => Promise<boolean>;
   updateEvent: (eventId: string, eventData: Partial<Event>) => Promise<boolean>;
   deleteEvent: (eventId: string) => Promise<boolean>;
+    deleteEvents: (eventIds: string[]) => Promise<{ success: string[]; failed: { eventId: string; reason: string }[] }>;
   addResult: (eventId: string, results: Omit<EventResult, 'id' | 'eventId' | 'createdAt'>[]) => Promise<boolean>;
   loading: boolean;
 }
@@ -38,6 +39,28 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [results, setResults] = useState<EventResult[]>([]);
   const [loading, setLoading] = useState(false);
+
+    // Bulk delete events
+    const deleteEvents = async (eventIds: string[]): Promise<{ success: string[]; failed: { eventId: string; reason: string }[] }> => {
+      setLoading(true);
+      const success: string[] = [];
+      const failed: { eventId: string; reason: string }[] = [];
+      for (const eventId of eventIds) {
+        try {
+          const ok = await deleteEvent(eventId);
+          if (ok) {
+            success.push(eventId);
+          } else {
+            failed.push({ eventId, reason: 'Delete failed' });
+          }
+        } catch (err: any) {
+          failed.push({ eventId, reason: err?.message || 'Unknown error' });
+        }
+      }
+      setLoading(false);
+      await refreshData();
+      return { success, failed };
+    };
 
   // Safe response parser to avoid "Unexpected end of JSON input" when
   // the server returns empty responses (e.g. 403 with no body).
@@ -111,11 +134,11 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
 
     loadInitialData();
 
-    // Set up auto-refresh every 30 seconds
+    // Set up auto-refresh every 5 seconds
     const refreshInterval = setInterval(() => {
       fetchEvents();
       fetchRegistrations();
-    }, 30000);
+    }, 5000);
 
     // Set up visibility change listener to refresh when tab becomes active
     const handleVisibilityChange = () => {
@@ -422,6 +445,7 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
       if (data.event) {
         const updatedEvent = { ...data.event, id: data.event._id };
         setEvents(prev => prev.map(e => e.id === eventId ? updatedEvent : e));
+        await refreshData(); // Instant refresh after update
         return true;
       }
       return false;
@@ -477,6 +501,7 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
       if (data.results) {
         setResults(prev => [...prev, ...data.results]);
         setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'completed' as const } : e));
+        await refreshData(); // Instant refresh after results
         return true;
       }
       return false;
@@ -500,6 +525,7 @@ export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
     createEvent,
     updateEvent,
     deleteEvent,
+      deleteEvents,
     addResult,
     loading,
   };

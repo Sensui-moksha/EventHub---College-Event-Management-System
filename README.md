@@ -22,6 +22,7 @@ EventHub is a comprehensive event management system that streamlines college eve
 
 ## 🏗️ Project Architecture
 
+
 ```
 project/
 ├── .gitignore                # Git ignore configuration
@@ -35,7 +36,7 @@ project/
 ├── tsconfig.json             # Main TypeScript configuration
 ├── tsconfig.node.json        # TypeScript config for Node.js tools
 ├── vite.config.ts            # Vite bundler configuration
-├── public/                   # Static assets served by Vite
+├── Public/                   # Static assets served by Vite
 │   ├── favicon.svg           # Application favicon (EventHub logo)
 │   └── screenshots/          # Project screenshots for documentation
 │       ├── home.png          # Landing page screenshot
@@ -43,45 +44,56 @@ project/
 │       ├── create-event.png  # Event creation page screenshot
 │       ├── event-details.png # Event details page screenshot
 │       └── mobile.png        # Mobile responsive view screenshot
+├── scripts/                  # Utility scripts for development
+│   └── start-dev.js          # Start both frontend and backend in dev mode
 ├── server/                   # Backend API (Node.js/Express)
 │   ├── .env                  # Environment variables (MongoDB URI, JWT secret)
 │   ├── index.js              # Main backend server with all routes
 │   ├── package.json          # Backend dependencies and scripts
 │   └── node_modules/         # Backend installed packages
 └── src/                      # Frontend React application
-    ├── App.tsx               # Main app component with routing
-    ├── index.css             # Global styles and Tailwind imports
-    ├── main.tsx              # React application entry point
-    ├── vite-env.d.ts         # Vite TypeScript declarations
-    ├── components/           # Reusable UI components
-    │   ├── DashboardBulkDelete.tsx  # Bulk delete functionality
-    │   ├── EventCard.tsx     # Event display card component
-    │   ├── MultiEventRegistration.tsx # Multi-event registration with QR codes
-    │   ├── QRScanner.tsx     # QR code scanner for attendance
-    │   ├── Navbar.tsx        # Navigation header component
-    │   ├── ProtectedRoute.tsx# Authentication route protection
-    │   └── ui/
-    │       └── Toast.tsx     # Toast notification system
-    ├── contexts/             # React Context providers
-    │   ├── AuthContext.tsx   # Authentication state management
-    │   ├── EventContext.tsx  # Event data and operations
-    │   ├── NotificationContext.tsx # Notification handling
-    │   └── ThemeContext.tsx  # Theme management (future use)
-    ├── pages/                # Application pages/views
-    │   ├── AdminUsers.tsx    # User management for admins
-    │   ├── CreateEvent.tsx   # Event creation and editing
-    │   ├── Dashboard.tsx     # User dashboard with overview
-    │   ├── EventDetails.tsx  # Detailed event view and participants
-    │   ├── Events.tsx        # Events listing with multi-register toggle
-    │   ├── EventsFixed.tsx   # Alternative events view
-    │   ├── Home.tsx          # Landing page
-    │   ├── Login.tsx         # Authentication page with demo accounts
-    │   ├── Profile.tsx       # User profile management
-    │   ├── QRScannerPage.tsx # QR scanner interface for organizers
-    │   ├── Register.tsx      # User registration
-    │   └── RegisterFixed.tsx # Alternative registration form
-    └── types/
-        └── index.ts          # TypeScript interfaces and types
+   ├── App.tsx               # Main app component with routing
+   ├── index.css             # Global styles and Tailwind imports
+   ├── main.tsx              # React application entry point
+   ├── vite-env.d.ts         # Vite TypeScript declarations
+   ├── components/           # Reusable UI components
+   │   ├── Calendar.tsx              # Calendar integration and export (NEW)
+   │   ├── DashboardBulkDelete.tsx   # Bulk delete functionality
+   │   ├── EventCard.tsx             # Event display card component
+   │   ├── ManualRefreshButton.tsx   # Manual refresh for event data
+   │   ├── MultiEventRegistration.tsx# Multi-event registration with QR codes
+   │   ├── Navbar.tsx                # Navigation header component
+   │   ├── OverlayFooter.tsx         # Footer overlay for modals
+   │   ├── ProtectedRoute.tsx        # Authentication route protection
+   │   ├── QRScanner.tsx             # QR code scanner for attendance
+   │   ├── RefreshIndicator.tsx      # Visual refresh indicator
+   │   └── ui/
+   │       └── Toast.tsx             # Toast notification system
+   ├── contexts/             # React Context providers
+   │   ├── AuthContext.tsx           # Authentication state management
+   │   ├── EventContext.tsx          # Event data and operations
+   │   ├── NotificationContext.tsx   # Notification handling
+   │   └── ThemeContext.tsx          # Theme management (future use)
+   ├── hooks/                # Custom React hooks
+   │   └── useImmediateRefresh.ts    # Hook for instant data refresh
+   ├── pages/                # Application pages/views
+   │   ├── AdminUsers.tsx            # User management for admins
+   │   ├── CalendarPage.tsx          # Calendar view page (NEW)
+   │   ├── CreateEvent.tsx           # Event creation and editing
+   │   ├── Dashboard.tsx             # User dashboard with overview
+   │   ├── EventDetails.tsx          # Detailed event view and participants
+   │   ├── Events.tsx                # Events listing with multi-register toggle
+   │   ├── Home.tsx                  # Landing page
+   │   ├── Login.tsx                 # Authentication page with demo accounts
+   │   ├── Profile.tsx               # User profile management
+   │   ├── QRScannerPage.tsx         # QR scanner interface for organizers
+   │   ├── Register.tsx              # User registration
+   │   └── RegisterFixed.tsx         # Alternative registration form
+   ├── types/                # TypeScript interfaces and types
+   │   └── index.ts                  # Shared type definitions
+   └── utils/                # Utility/helper functions
+      ├── animations.ts            # Animation helpers
+      └── categories.ts            # Event category definitions
 ```
 
 ### 🔧 Technical Architecture
@@ -160,72 +172,106 @@ project/
   - Register for multiple events simultaneously
   - Each event gets its own downloadable QR code
   - Bulk registration with individual QR generation
-- **Organizer Tools:**
-  - QR Scanner page accessible to organizers and admins
-  - Event selection dropdown for targeted scanning
-  - Success/failure tracking with detailed reports
-- **Reliable Registration System:**
-  - Smooth event registration process
-  - Proper database integration
-  - Comprehensive error handling and validation
 
-### 🔔 Notification System
+## ✨ Advanced Features & Recent Enhancements
+  - QR Scanner page accessible to organizers and admins
+
+### 📅 Event & Calendar Management
+- **Complete CRUD Operations:** Create, read, update, delete events
+- **Event Categories:** Technical, Cultural, Sports, Workshop, Seminar
+- **Live Image Preview:** Real-time validation and preview of event images
+- **Registration Management:** Track participants and registration status
+- **Event Status Tracking:** Upcoming, Ongoing, Completed, Cancelled
+- **Bulk Operations:** Mass delete events with admin privileges
+- **Calendar Integration:**
+   - Dedicated calendar page to view all events in a monthly grid
+   - Export events to Google Calendar or download as .ics files
+   - Add events directly to your device calendar
+   - Visualize event dates and details interactively
+
+
+### 🎯 Registration System
+- **Multi-Event Registration:** Register for multiple events in one session
+- **Unique QR Codes:** Each event generates its own QR code with event name overlay
+- **QR Code Features:** Event names displayed below QR codes with custom canvas rendering
+- **Secure QR Codes:** HMAC-SHA256 signatures prevent tampering and forgery
+- **QR Code Specifications:** 300x300px PNG with Arial 16px bold event names
+- **Download QR Codes:** One-click download of individual event QR codes
+- **QR Scanner:** Built-in camera scanner for organizers and admins
+- **Attendance Tracking:** Real-time attendance marking with scan validation
+- **Scan History:** Complete log of all QR code scans with timestamps
+- **Registration Limits:** Maximum participant controls with validation
+- **Registration Deadlines:** Time-bound registration periods
+- **Unified Calendar & Registration:** Register for events directly from the calendar view (NEW)
+- **Dark Mode Ready:** Theme context prepared for future implementation
+
+### 🔔 Notification & Feedback System
 - **Toast Notifications:** Real-time feedback for user actions
 - **Error Handling:** Comprehensive error messages and validation
 - **Success Confirmations:** Clear feedback for completed actions
 - **Context-aware Notifications:** Relevant notifications based on user role
+- **Manual & Auto Refresh:** Visual refresh indicators and manual refresh button for up-to-date event data (NEW)
 
-### 🎨 User Interface
+
+### 🎨 User Interface & Usability
 - **Responsive Design:** Mobile-first approach with Tailwind CSS
 - **Modern UI Components:** Clean, professional interface
 - **Interactive Elements:** Hover effects, smooth transitions
 - **Accessibility:** WCAG compliant design principles
 - **Dark Mode Ready:** Theme context prepared for future implementation
-
----
-
-## 🌐 Cross-Platform Compatibility
-
-**EventHub works seamlessly on all major platforms:**
-- ✅ **Windows** (10/11)
-- ✅ **macOS** (10.15+)
-- ✅ **Linux** (Ubuntu, Debian, Fedora, etc.)
-
+- **Overlay Footers & Modals:** Improved modal dialogs and overlays for better UX (NEW)
 ### Quick Start Scripts
 
-**Windows:**
-```cmd
-REM Install dependencies
-install-windows.bat
-
-REM Start the application
-start-windows.bat
-```
-
-**macOS/Linux:**
-```bash
-# Make scripts executable (one-time setup)
-chmod +x install.sh start.sh
-
-# Install dependencies
-./install.sh
-
-# Start the application
-./start.sh
-```
-
-📖 **For detailed platform-specific instructions, see [CROSS_PLATFORM_SETUP.md](./CROSS_PLATFORM_SETUP.md)**
-
----
+### 📱 Advanced QR Code & Attendance System
+- **Event-Specific QR Codes:** Each registration generates a unique QR code per event
+- **Visual Event Identification:** Event names prominently displayed on QR images
+- **Canvas-Based Generation:** Custom QR generation with HTML5 Canvas and text overlays
+- **Unified QR Scanner Interface:**
+   - Clean, single camera window design
+   - Camera-based scanning with HTML5 QR code reader
+   - Manual entry fallback option
+   - Real-time validation and feedback
+   - Scan statistics and history tracking
+- **Security Features:**
+   - HMAC-SHA256 cryptographic signatures
+   - Timestamp validation and expiry
+   - Event-specific validation prevents cross-event usage
+- **Multi-Event Support:**
+   - Register for multiple events simultaneously
+   - Each event gets its own downloadable QR code
+   - Bulk registration with individual QR generation
+- **Organizer Tools:**
+   - QR Scanner page accessible to organizers and admins
+   - Event selection dropdown for targeted scanning
+   - Success/failure tracking with detailed reports
+- **Reliable Registration System:**
+   - Smooth event registration process
+   - Proper database integration
+   - Comprehensive error handling and validation
 
 ## 🛠️ Installation & Setup Guide
 
-### 📋 Prerequisites
-Ensure you have the following installed on your system:
-- **Node.js** (v18.0.0 or higher) - [Download here](https://nodejs.org/)
-- **npm** (v9.0.0 or higher) - Comes with Node.js
-- **Git** - [Download here](https://git-scm.com/)
-- **MongoDB Atlas Account** - [Sign up here](https://www.mongodb.com/atlas)
+### �️ Technical Architecture & Utilities
+
+#### Frontend (React + TypeScript + Vite)
+- **Framework:** React 18 with TypeScript for type safety
+- **Build Tool:** Vite for fast development and optimized builds
+- **Styling:** Tailwind CSS for responsive design
+- **Routing:** React Router DOM v7 for navigation
+- **State Management:** React Context API with custom hooks
+- **Forms:** React Hook Form with Zod validation
+- **QR Codes:** QR code generation and scanning capabilities
+- **Calendar Integration:** Full-featured calendar with export and sync
+- **Custom Hooks:** useImmediateRefresh and more for advanced state management
+- **Utility Functions:** Centralized helpers for animations, categories, and more
+
+#### Backend (Node.js + Express + MongoDB)
+- **Runtime:** Node.js with ES modules
+- **Framework:** Express.js for REST API
+- **Database:** MongoDB Atlas (cloud database)
+- **ODM:** Mongoose for data modeling
+- **Authentication:** JWT tokens with bcrypt password hashing
+- **File Handling:** Base64 image storage for profile pictures
 - **Code Editor** - VS Code recommended
 
 ### 🚀 Step-by-Step Installation

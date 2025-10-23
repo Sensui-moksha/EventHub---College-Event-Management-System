@@ -4,8 +4,9 @@ export interface User {
   regId?: string;
   name: string;
   email: string;
-  role: 'student' | 'organizer' | 'admin';
+  role: 'student' | 'organizer' | 'admin' | 'faculty';
   section?: string;
+  roomNo?: string;
   department?: string;
   branch?: string; // Added branch for backend compatibility
   mobile?: string;

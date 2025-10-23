@@ -5,7 +5,6 @@ dotenv.config();
 
 import express from 'express';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import QRCode from 'qrcode';
@@ -143,43 +142,33 @@ const generateQRCodeWithEventName = async (qrData, eventName, options = {}) => {
 
 // ...existing code...
 
-// Resilient MongoDB connection: try Atlas -> local -> in-memory (dev)
-const connectWithFallback = async () => {
+// Connect to MongoDB Atlas only. Do not fall back to local or in-memory DB.
+const connectToAtlas = async () => {
   const atlasUri = process.env.MONGODB_URI;
-  const localUri = process.env.MONGODB_LOCAL_URI || 'mongodb://127.0.0.1:27017/project-expo';
 
-  const tryConnect = async (uri) => {
-    try {
-      await mongoose.connect(uri, { connectTimeoutMS: 10000 });
-      console.log(`MongoDB connected to ${uri}`);
-      return true;
-    } catch (err) {
-      console.error(`MongoDB connection error to ${uri}:`, err.message || err);
-      return false;
-    }
-  };
-
-  if (atlasUri) {
-    const ok = await tryConnect(atlasUri);
-    if (ok) return;
+  if (!atlasUri) {
+    console.error('FATAL: MONGODB_URI is not set. The server is configured to use MongoDB Atlas only.');
+    process.exit(1);
   }
 
-  // Try local MongoDB
-  if (await tryConnect(localUri)) return;
-
-  // Fallback to in-memory MongoDB for development
   try {
-    console.log('Starting in-memory MongoDB server (mongodb-memory-server)');
-    const mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
-    await mongoose.connect(uri);
-    console.log('MongoDB connected to in-memory server');
+    await mongoose.connect(atlasUri, { connectTimeoutMS: 10000 });
+    console.log(`MongoDB connected to Atlas.`);
   } catch (err) {
-    console.error('Failed to start in-memory MongoDB server:', err);
+    console.error('MongoDB Atlas connection error:', err.message || err);
+    console.error('\nTroubleshooting suggestions:');
+    console.error('- Verify the `MONGODB_URI` in your environment (.env) is correct and contains the right username, password, and cluster host.');
+    console.error('- If you see DNS/SRV lookup errors (e.g., "querySrv ESERVFAIL"), your environment may not support SRV DNS lookups.');
+    console.error('  * Try replacing the `mongodb+srv://` URI with the standard connection string (mongodb://host1,host2,.../?replicaSet=...) provided by Atlas.');
+    console.error('  * Check local DNS, VPN, or firewall settings that might block SRV or DNS lookups.');
+    console.error('- Ensure your IP/network is allowed in the Atlas Network Access whitelist or use 0.0.0.0/0 for testing (not recommended for production).');
+    console.error('- Confirm the database user credentials in the URI are valid and have proper privileges.');
+    console.error('\nThe server will exit because it is configured to use Atlas only.');
+    process.exit(1);
   }
 };
 
-connectWithFallback();
+connectToAtlas();
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -190,9 +179,10 @@ const userSchema = new mongoose.Schema({
   department: { type: String, required: true },
   branch: { type: String, required: true },
   mobile: { type: String, required: true },
-  year: { type: Number, required: true },
+  year: { type: Number, required: function () { return this.role === 'student'; } }, // Only required for students
   regId: { type: String }, // Add regId field for students
-  section: { type: String }, // Add section field
+  section: { type: String }, // Student section
+  roomNo: { type: String }, // Faculty room number
   avatar: { type: String }, // Add avatar field for profile pictures
   createdAt: { type: Date, default: Date.now }
 });
@@ -839,9 +829,20 @@ app.post('/api/events/:eventId/remove-participant', async (req, res) => {
 app.post('/api/register', async (req, res) => {
   console.log('Register API received:', req.body);
   try {
-    const { name, email, password, role, department, branch, mobile, year, regId, section } = req.body;
-    if (!name || !email || !password || !role || !department || !branch || !mobile || !year) {
-      return res.status(400).json({ error: 'All fields are required.' });
+    const { name, email, password, role, department, branch, mobile, year, regId, section, roomNo } = req.body;
+    // Basic validation
+    if (!name || !email || !password || !role || !department || !branch || !mobile) {
+      return res.status(400).json({ error: 'Basic fields are required.' });
+    }
+    // Role-specific validation
+    if (role === 'student' && !year) {
+      return res.status(400).json({ error: 'Year is required for students.' });
+    }
+    if (role === 'student' && !section) {
+      return res.status(400).json({ error: 'Section is required for students.' });
+    }
+    if (role === 'faculty' && !roomNo) {
+      return res.status(400).json({ error: 'Room number is required for faculty.' });
     }
     // Check if user already exists
     const existing = await User.findOne({ email });
@@ -850,7 +851,7 @@ app.post('/api/register', async (req, res) => {
     }
     // Hash password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashedPassword, role, department, branch, mobile, year, regId, section });
+  const user = new User({ name, email, password: hashedPassword, role, department, branch, mobile, year: role === 'faculty' ? undefined : year, regId, section, roomNo });
     await user.save();
     // Don't send password back
     const userObj = user.toObject();
@@ -883,12 +884,12 @@ app.post('/api/login', async (req, res) => {
 app.put('/api/user/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, department, section, mobile, year, regId, avatar } = req.body;
+  const { name, email, department, section, mobile, year, regId, avatar, roomNo } = req.body;
     
     // Find and update user
     const user = await User.findByIdAndUpdate(
       id,
-      { name, email, department, section, mobile, year, regId, avatar },
+  { name, email, department, section, mobile, year, regId, avatar, roomNo },
       { new: true, runValidators: true }
     );
     
@@ -997,12 +998,12 @@ app.delete('/api/users/:id', async (req, res) => {
 app.put('/api/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, department, section, mobile, year, regId, avatar, role } = req.body;
+  const { name, email, department, section, mobile, year, regId, avatar, role, roomNo } = req.body;
     
     // Find and update user
     const user = await User.findByIdAndUpdate(
       id,
-      { name, email, department, section, mobile, year, regId, avatar, role },
+  { name, email, department, section, mobile, year, regId, avatar, role, roomNo },
       { new: true, runValidators: true }
     ).select('-password');
     
@@ -1020,11 +1021,22 @@ app.put('/api/users/:id', async (req, res) => {
 // Create new user (admin only)  
 app.post('/api/users', async (req, res) => {
   try {
-    const { name, email, password, role, department, section, mobile, year, regId } = req.body;
+  const { name, email, password, role, department, section, mobile, year, regId, roomNo } = req.body;
     
-    // Validate required fields
-    if (!name || !email || !password || !role || !department || !mobile || !year) {
-      return res.status(400).json({ error: 'All required fields must be provided.' });
+    // Basic validation
+    if (!name || !email || !password || !role || !department || !mobile) {
+      return res.status(400).json({ error: 'Basic fields are required.' });
+    }
+    
+    // Role-specific validation
+    if (role === 'student' && !year) {
+      return res.status(400).json({ error: 'Year is required for students.' });
+    }
+    if (role === 'student' && !section) {
+      return res.status(400).json({ error: 'Section is required for students.' });
+    }
+    if (role === 'faculty' && !roomNo) {
+      return res.status(400).json({ error: 'Room number is required for faculty.' });
     }
     
     // Validate password length
@@ -1056,9 +1068,10 @@ app.post('/api/users', async (req, res) => {
       password: hashedPassword,
       role,
       department,
-      section: section || '',
+  section: section || '',
+  roomNo: roomNo || '',
       mobile,
-      year,
+  year: role === 'faculty' ? undefined : year,
       regId: regId || `USER-${Date.now()}`,
       branch: department // Set branch same as department for compatibility
     });
@@ -1082,11 +1095,22 @@ app.post('/api/users', async (req, res) => {
 // Admin: Create new user
 app.post('/api/admin/users', async (req, res) => {
   try {
-    const { name, email, password, role, department, section, mobile, year, regId } = req.body;
+  const { name, email, password, role, department, section, mobile, year, regId, roomNo } = req.body;
     
-    // Validate required fields
-    if (!name || !email || !password || !role || !department || !mobile || !year) {
-      return res.status(400).json({ error: 'All required fields must be provided.' });
+    // Basic validation
+    if (!name || !email || !password || !role || !department || !mobile) {
+      return res.status(400).json({ error: 'Basic fields are required.' });
+    }
+    
+    // Role-specific validation
+    if (role === 'student' && !year) {
+      return res.status(400).json({ error: 'Year is required for students.' });
+    }
+    if (role === 'student' && !section) {
+      return res.status(400).json({ error: 'Section is required for students.' });
+    }
+    if (role === 'faculty' && !roomNo) {
+      return res.status(400).json({ error: 'Room number is required for faculty.' });
     }
     
     // Validate password length
@@ -1118,9 +1142,10 @@ app.post('/api/admin/users', async (req, res) => {
       password: hashedPassword,
       role,
       department,
-      section: section || '',
+  section: section || '',
+  roomNo: roomNo || '',
       mobile,
-      year,
+  year: role === 'faculty' ? undefined : year,
       regId: regId || `USER-${Date.now()}`,
       branch: department // Set branch same as department for compatibility
     });

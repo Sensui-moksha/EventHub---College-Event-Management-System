@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useEvents } from '../contexts/EventContext';
+import { useEvents } from '../contexts/EventContext.tsx';
 import { useNotifications } from '../contexts/NotificationContext';
 import RefreshIndicator from './RefreshIndicator';
 import ManualRefreshButton from './ManualRefreshButton';
@@ -114,8 +114,21 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between items-center h-14 sm:h-16 lg:h-18 gap-2">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group flex-shrink-0 min-w-0">
-            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg group-hover:scale-105 transition-transform duration-200">
-              <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            {/* College Logo */}
+            <div className="p-1 bg-white rounded-lg shadow-sm border border-gray-200 group-hover:shadow-md transition-all duration-200">
+              <img 
+                src="/logo-small.png" 
+                alt="College Logo" 
+                className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                onError={(e) => {
+                  // Fallback to graduation cap icon if logo fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden p-1.5 sm:p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg">
+                <GraduationCap className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+              </div>
             </div>
             <span className="text-base sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent truncate">
               EventHub
